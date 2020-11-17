@@ -1,0 +1,19 @@
+{
+  "name": "prog-black-project",
+  "version": "1.0.0",
+  "description": "Project for Programming (Black) module",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jshepherd01/prog_black_term1_proj.git"
+  },
+  "author": "Joe Shepherd",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jshepherd01/prog_black_term1_proj/issues"
+  },
+  "homepage": "https://github.com/jshepherd01/prog_black_term1_proj#readme"
+}
