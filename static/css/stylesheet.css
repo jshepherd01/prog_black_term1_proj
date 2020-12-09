@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans&family=Poppins&display=swap');
+
+body {
+    background-color: #1c1c21;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.container {
+    border: 1px solid #363636;
+    border-radius: 0 0 8px 8px;
+    border-top-width: 0;
+    color: #bfbfbf;
+}
+
+.col-md-6 {
+    margin-bottom: 15px;
+}
+
+h1, h2, h3, p {
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
+}
+
+h1 {
+    font-size: 5em;
+}
+
+h2 {
+    font-size: 3em;
+}
+
+h3 {
+    font-size: 2em;
+}
+
+p {
+    font-size: 1.5em;
+}
+
+.h-line {
+    margin-left: -15px;
+    margin-right: -15px;
+    margin-bottom: 10px;
+    height: 1px;
+    background-color: #363636;
+}
+
+.drop-btn {
+    width: 100%;
+    font-size: 1.5em;
+    color: green;
+    border-radius: 8px;
+    padding: 1em 0;
+    background-color: #1c1c1c;
+    border: 2px solid green;
+}
+
+.drop-btn-open {
+    border-radius: 8px 8px 0 0;
+}
+
+.drop-btn:hover {
+    color: white;
+    background-color: green;
+}
+
+.drop-btn:focus, input:focus {
+    outline: none;
+}
+
+.drop-frm {
+    border: 2px solid #bfbfbf;
+    border-top-width: 0;
+    padding: 0.5em;
+    border-radius: 0 0 8px 8px;
+    display: none;
+}
+
+.drop-frm-open {
+    display: block;
+}
+
+.frm-field {
+    font-size: 1.1em;
+    text-align: left;
+    margin-bottom: 0.6em;
+    display: inline-block;
+}
+
+input[type="text"] {
+    background-color: inherit;
+    color: inherit;
+    border: none;
+    border-bottom: 2px solid #bfbfbf;
+}
+
+input[type="text"]:hover, input[type="text"]:focus {
+    color: green;
+    border-color: green;
+}
+
+input[type="checkbox"] {
+    display: none;
+}
+
+.toggle-word {
+    display: inline-block;
+    background-color: inherit;
+    color: inherit;
+    border: none;
+    border-bottom: 2px solid #bfbfbf;
+    padding: 1px 2px;
+    cursor: pointer;
+}
+
+.toggle-word:hover {
+    color: green;
+    border-color: green;
+}
+
+.hide {
+    display: none;
+}
