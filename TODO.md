@@ -1,8 +1,8 @@
 # Front End
 
-- Finish styling first form
+- Add tooltips to first forms
+- Add 'copy passcode to clipboard' button
 - Add Advanced Options dropdown
-- Style second form
 - Send form data
 - Add additional forms
 - Fetch functionality

@@ -64,20 +64,24 @@ p {
     background-color: green;
 }
 
-.drop-btn:focus, input:focus {
+button:focus, input:focus {
     outline: none;
 }
 
 .drop-frm {
-    border: 2px solid #bfbfbf;
-    border-top-width: 0;
-    padding: 0.5em;
-    border-radius: 0 0 8px 8px;
+    border: none;
+    padding: 0;
     display: none;
 }
 
 .drop-frm-open {
     display: block;
+}
+
+.drop-frm-fields {
+    padding: 0.5em;
+    border: 2px solid #bfbfbf;
+    border-width: 0 2px;
 }
 
 .frm-field {
@@ -101,6 +105,35 @@ input[type="text"]:hover, input[type="text"]:focus {
 
 input[type="checkbox"] {
     display: none;
+}
+
+input[type="submit"] {
+    background-color: inherit;
+    color: green;
+    border: 2px solid green;
+    border-radius: 0 0 8px 8px;
+    width: 100%;
+}
+
+input[type="submit"]:hover {
+    color: white;
+    background-color: green;
+}
+
+.refresh-btn {
+    background-color: inherit;
+    border: none;
+    color: #bfbfbf;
+    font-size: 1.5em;
+}
+
+.material-icons {
+    font-size: inherit;
+    vertical-align: text-bottom;
+}
+
+.refresh-btn:hover {
+    color: green;
 }
 
 .toggle-word {
