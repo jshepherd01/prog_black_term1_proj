@@ -29,23 +29,63 @@
                             <button class="drop-btn" id="drop-upload">Upload an image</button>
                             <form class="drop-frm" id="frm-upload">
                                 <div class="drop-frm-fields">
-                                    <span class="frm-field">Image Title</span>
+                                    <label for="upload-title" class="frm-field">Image Title</label>
                                         <input name='title' type='text' id='upload-title'><br>
-                                    <span class="frm-field">Editing Passcode</span>
+                                    <label for="upload-file" class="frm-field">Choose File</label>
+                                        <input name="file" type="file" id="upload-file">
+                                        <div class="btn-block">
+                                            <button class='icon-btn' id='upload-file-btn' type="button">
+                                                <i class="material-icons">attach_file</i>
+                                            </button>
+                                        </div>
+                                        <label for="upload-file" class="frm-field" id="upload-file-name"></label><br>
+                                    <label for="upload-edit-pass" class="frm-field">Editing Passcode</label>
                                         <input size="26" name='edit-pass' type='text' id='upload-edit-pass' readonly>
-                                        <button class='refresh-btn' id='upload-edit-pass-refresh'>
-                                            <i class="material-icons">refresh</i>
-                                        </button><br>
-                                    <span class="frm-field">Private</span>
-                                        <input name='priv' checked type='checkbox' id='upload-priv'><span class='toggle-word' id='upload-priv-tog'>YES</span><br>
-                                    <div id='upload-view-pass-container'>
-                                        <span class="frm-field">Viewing Passcode</span>
-                                            <input size="26" name='view-pass' type='text' id='upload-view-pass' readonly>
-                                            <button class='refresh-btn' id='upload-view-pass-refresh'>
+                                        <div class="btn-block">
+                                            <button class='icon-btn' id='upload-edit-pass-copy' type="button">
+                                                <i class="material-icons">content_copy</i>
+                                            </button>
+                                            <button class='icon-btn' id='upload-edit-pass-refresh' type="button">
                                                 <i class="material-icons">refresh</i>
-                                            </button><br>
+                                            </button>
+                                        </div><br>
+                                    <label for="upload-priv" class="frm-field">Private</label>
+                                        <input name='priv' checked type='checkbox' id='upload-priv'>
+                                        <div class="btn-block">
+                                            <button class='icon-btn' id='upload-priv-tog' type="button">
+                                                <i class="material-icons">check</i>
+                                            </button>
+                                        </div><br>
+                                    <div id='upload-view-pass-container'>
+                                        <label for="upload-view-pass" class="frm-field">Viewing Passcode</label>
+                                            <input size="26" name='view-pass' type='text' id='upload-view-pass' readonly>
+                                            <div class="btn-block">
+                                                <button class='icon-btn' id='upload-view-pass-copy' type="button">
+                                                    <i class="material-icons">content_copy</i>
+                                                </button>
+                                                <button class='icon-btn' id='upload-view-pass-refresh' type="button">
+                                                    <i class="material-icons">refresh</i>
+                                                </button>
+                                            </div><br>
                                     </div>
-                                    <span class="frm-field">Advanced Options (+)</span><br>
+                                    <label class="frm-field">
+                                        <button class='clps-btn' id='clps-btn-upload' type="button">
+                                            Show More Options
+                                        </button>
+                                    </label><br>
+                                    <div class='clps-frm hide' id='clps-frm-upload'>
+                                        <label for="upload-author" class="frm-field">Author Name</label>
+                                            <input name='author' type='text' id='upload-author'><br>
+                                        <label for="upload-copyright" class="frm-field">Copyright Information</label>
+                                            <input name='copyright' type='text' id='upload-copyright'><br>
+                                        <label for="upload-nsfw" class="frm-field">Mark as NSFW</label>
+                                            <input name='nsfw' type='checkbox' id='upload-nsfw'>
+                                            <div class="btn-block">
+                                                <button class='icon-btn' id='upload-nsfw-tog' type="button">
+                                                    <i class="material-icons">close</i>
+                                                </button>
+                                            </div><br>
+                                    </div>
                                 </div>
                                 <input type='submit' value='Upload' id='upload-submit'>
                             </form>

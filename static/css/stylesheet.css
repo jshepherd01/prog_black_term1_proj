@@ -80,14 +80,18 @@ button:focus, input:focus {
 
 .drop-frm-fields {
     padding: 0.5em;
+    padding-left: 1em;
     border: 2px solid #bfbfbf;
     border-width: 0 2px;
 }
 
 .frm-field {
     font-size: 1.1em;
+    font-weight: normal;
     text-align: left;
-    margin-bottom: 0.6em;
+    margin-bottom: 0.3em;
+    margin-top: 0.3em;
+    margin-left: -0.5em;
     display: inline-block;
 }
 
@@ -98,12 +102,16 @@ input[type="text"] {
     border-bottom: 2px solid #bfbfbf;
 }
 
-input[type="text"]:hover, input[type="text"]:focus {
+input[type="text"]:hover, input[type="text"]:focus, .clps-btn:hover, .clps-btn:focus, .toggle-word:hover, .toggle-word:focus, .icon-btn:hover, .icon-btn:focus, input:hover+.btn-block>.icon-btn:first-child, input:focus+.btn-block>.icon-btn:first-child {
     color: green;
     border-color: green;
 }
 
 input[type="checkbox"] {
+    display: none;
+}
+
+input[type="file"] {
     display: none;
 }
 
@@ -120,11 +128,12 @@ input[type="submit"]:hover {
     background-color: green;
 }
 
-.refresh-btn {
+.icon-btn {
     background-color: inherit;
     border: none;
     color: #bfbfbf;
     font-size: 1.5em;
+    padding: 0;
 }
 
 .material-icons {
@@ -132,8 +141,9 @@ input[type="submit"]:hover {
     vertical-align: text-bottom;
 }
 
-.refresh-btn:hover {
-    color: green;
+.btn-block {
+    display: inline-block;
+    width: auto;
 }
 
 .toggle-word {
@@ -146,11 +156,13 @@ input[type="submit"]:hover {
     cursor: pointer;
 }
 
-.toggle-word:hover {
-    color: green;
-    border-color: green;
-}
-
 .hide {
     display: none;
+}
+
+.clps-btn {
+    all: inherit;
+    border-bottom: 2px solid #bfbfbf;
+    cursor: pointer;
+    margin: 0;
 }
