@@ -30,6 +30,7 @@ This directory stores static files which the user's browser can request directly
 
 This directory contains all CSS styling for the site.
 - stylesheet.css: CSS styling for the entire site; might get refactored like the JavaScript code is further down the line
+- bootstrap.min.css: using a local version of the bootstrap CSS so I can delete bits that annoy me, rather than having to overwrite them in my stylesheet
 
 ### js
 

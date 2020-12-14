@@ -10,12 +10,31 @@ function genPass() {
     return btoa(String.fromCharCode.apply(null,buf));
 }
 
+function displayPopup(element) {
+    return new Promise ((resolve, reject) => {
+        try {
+            let buttonList = Array.from(document.getElementsByClassName(element.getAttribute('data-buttonclass')));
+            let handler = event => {
+                let trigger = event.trigger || event.srcElement;
+                element.classList.add('hide');
+                buttonList.forEach((i) => {i.removeEventListener('click', handler)});
+                resolve(trigger.getAttribute('data-return'));
+            }
+            element.classList.remove('hide');
+            buttonList.forEach((i) => {i.addEventListener('click', handler)});
+        } catch (err) {
+            reject(err);
+        }
+    });
+}
 
 /* element references */
 const dropUpload = document.getElementById('drop-upload');
 const dropView = document.getElementById('drop-view');
 const frmUpload = document.getElementById('frm-upload');
 const frmView = document.getElementById('frm-view');
+const subUpload = document.getElementById('upload-submit');
+const subView = document.getElementById('view-submit');
 const buttonUploadFile = document.getElementById('upload-file-btn');
 const inputUploadFile = document.getElementById('upload-file');
 const previewUploadFile = document.getElementById('upload-file-name');
@@ -33,8 +52,10 @@ const formCollapsibleUpload = document.getElementById('clps-frm-upload');
 const toggleUploadNsfw = document.getElementById('upload-nsfw-tog');
 const inputUploadNsfw = document.getElementById('upload-nsfw');
 
-/* add event handlers */
-dropUpload.addEventListener('click', (event) => {
+const popupServerDown = document.getElementById('server-down');
+
+/* add e handlers */
+dropUpload.addEventListener('click', (e) => {
     if (dropUpload.classList.contains("drop-btn-open")) {
         frmUpload.classList.remove("drop-frm-open");
         dropUpload.classList.remove("drop-btn-open");
@@ -44,7 +65,7 @@ dropUpload.addEventListener('click', (event) => {
     }
 })
 
-dropView.addEventListener('click', (event) => {
+dropView.addEventListener('click', (e) => {
     if (dropView.classList.contains("drop-btn-open")) {
         frmView.classList.remove("drop-frm-open");
         dropView.classList.remove("drop-btn-open");
@@ -54,7 +75,89 @@ dropView.addEventListener('click', (event) => {
     }
 })
 
-buttonUploadFile.addEventListener('click', (event) => {
+frmUpload.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    subUpload.classList.remove('btn-grn');
+    subUpload.classList.add('btn-amb');
+    subUpload.value = 'Processing...';
+    subUpload.disabled = true;
+
+    const elements = frmUpload.elements;
+    let data = {};
+    let file;
+    let invalid = [];
+
+    /* some validation and value parsing */
+    /* proper validation will happen server-side */
+
+    if (elements['title'].value === "") {
+        invalid.push('title');
+    } else {
+        data['title'] = elements['title'].value;
+    }
+
+    if (elements['file'].files.length !== 1) {
+        invalid.push('file');
+    } else if (!elements['file'].files[0].type.startsWith("image/")) {
+        invalid.push('file');
+    } else {
+        file = elements['file'].files[0];
+    }
+
+    if (elements['priv'].checked) {
+        if (elements['view-pass'].value === "") {
+            invalid.push('view-pass');
+        } else {
+            data['view-pass'] = elements['view-pass'].value;
+        }
+    } else {
+        data['view-pass'] = "";
+    }
+
+    data['edit-pass'] = elements['edit-pass'].value
+    data['author'] = elements['author'].value
+    data['copyright'] = elements['copyright'].value
+    data['nsfw'] = elements['nsfw'].checked
+
+    if (invalid.length === 0) {
+        fetch('/image/upload-prep', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(resp => {
+            subUpload.classList.remove('btn-amb');
+            subUpload.classList.add('btn-grn');
+            subUpload.value = 'Upload';
+            subUpload.disabled = false;
+            console.log(resp);
+            return;
+        }).catch(err => {
+            subUpload.classList.remove('btn-amb');
+            subUpload.classList.add('btn-red');
+            subUpload.value = 'No Response';
+            displayPopup(popupServerDown).then((ret) => {
+                subUpload.classList.remove('btn-red');
+                subUpload.classList.add('btn-grn');
+                subUpload.value = 'Upload';
+                subUpload.disabled = false;
+                if (ret === "retry") {
+                    frmUpload.dispatchEvent(new SubmitEvent('submit'));
+                }
+            });
+        })
+    } else {
+        subUpload.classList.remove('btn-amb');
+        subUpload.classList.add('btn-grn');
+        subUpload.value = 'Upload';
+        subUpload.disabled = false;
+        console.log(invalid);
+    }
+})
+
+buttonUploadFile.addEventListener('click', (e) => {
     inputUploadFile.dispatchEvent(new MouseEvent('click', {
         view: window,
         bubbles: true,
@@ -62,12 +165,12 @@ buttonUploadFile.addEventListener('click', (event) => {
     }))
 })
 
-inputUploadFile.addEventListener('change', (event) => {
+inputUploadFile.addEventListener('change', (e) => {
     let pathArray = inputUploadFile.value.split("\\")
     previewUploadFile.innerText = pathArray[pathArray.length - 1];
 })
 
-toggleUploadPriv.addEventListener('click', (event) => {
+toggleUploadPriv.addEventListener('click', (e) => {
     checkUploadPriv.dispatchEvent(new MouseEvent('click', {
         view: window,
         bubbles: true,
@@ -75,7 +178,7 @@ toggleUploadPriv.addEventListener('click', (event) => {
     }))
 })
 
-checkUploadPriv.addEventListener('change', (event) => {
+checkUploadPriv.addEventListener('change', (e) => {
     if (!checkUploadPriv.checked) {
         toggleUploadPriv.firstElementChild.innerText = "close";
         containerUploadViewPass.classList.add('hide');
@@ -85,11 +188,11 @@ checkUploadPriv.addEventListener('change', (event) => {
     }
 })
 
-refreshUploadEditPass.addEventListener('click', (event) => {
+refreshUploadEditPass.addEventListener('click', (e) => {
     inputUploadEditPass.value = genPass();
 })
 
-inputUploadEditPass.addEventListener('click', (event) => {
+inputUploadEditPass.addEventListener('click', (e) => {
     copyUploadEditPass.dispatchEvent(new MouseEvent('click', {
         view: window,
         bubbles: true,
@@ -97,17 +200,17 @@ inputUploadEditPass.addEventListener('click', (event) => {
     }))
 })
 
-copyUploadEditPass.addEventListener('click', (event) => {
+copyUploadEditPass.addEventListener('click', (e) => {
     inputUploadEditPass.select();
     inputUploadEditPass.setSelectionRange(0,24);
     document.execCommand('copy');
 })
 
-refreshUploadViewPass.addEventListener('click', (event) => {
+refreshUploadViewPass.addEventListener('click', (e) => {
     inputUploadViewPass.value = genPass();
 })
 
-inputUploadViewPass.addEventListener('click', (event) => {
+inputUploadViewPass.addEventListener('click', (e) => {
     copyUploadViewPass.dispatchEvent(new MouseEvent('click', {
         view: window,
         bubbles: true,
@@ -115,13 +218,13 @@ inputUploadViewPass.addEventListener('click', (event) => {
     }))
 })
 
-copyUploadViewPass.addEventListener('click', (event) => {
+copyUploadViewPass.addEventListener('click', (e) => {
     inputUploadViewPass.select();
     inputUploadViewPass.setSelectionRange(0,24);
     document.execCommand('copy');
 })
 
-buttonCollapsibleUpload.addEventListener('click', (event) => {
+buttonCollapsibleUpload.addEventListener('click', (e) => {
     if (!formCollapsibleUpload.classList.contains('hide')) {
         buttonCollapsibleUpload.innerText = "Show More Options";
         formCollapsibleUpload.classList.add('hide');
@@ -131,7 +234,7 @@ buttonCollapsibleUpload.addEventListener('click', (event) => {
     }
 })
 
-toggleUploadNsfw.addEventListener('click', (event) => {
+toggleUploadNsfw.addEventListener('click', (e) => {
     inputUploadNsfw.dispatchEvent(new MouseEvent('click', {
         view: window,
         bubbles: true,
@@ -139,7 +242,7 @@ toggleUploadNsfw.addEventListener('click', (event) => {
     }))
 })
 
-inputUploadNsfw.addEventListener('click', (event) => {
+inputUploadNsfw.addEventListener('click', (e) => {
     if (!inputUploadNsfw.checked) {
         toggleUploadNsfw.firstElementChild.innerText = "close";
     } else {
@@ -148,7 +251,7 @@ inputUploadNsfw.addEventListener('click', (event) => {
 })
 
 /* load event */
-window.addEventListener('load', (event) => {
+window.addEventListener('load', (e) => {
     inputUploadEditPass.value = genPass();
     inputUploadViewPass.value = genPass();
 })

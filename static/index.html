@@ -6,15 +6,31 @@
         <title>Image Hosting Site</title>
 
         <!-- Bootstrap css -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <link rel="stylesheet" href="css/bootstrap.min.css">
 
-        <!-- Google Material Icons -->
+        <!-- Material Icons -->
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
         <!-- CSS -->
         <link rel="stylesheet" href="css/stylesheet.css">
     </head>
     <body>
+        <div class="modal hide" tabindex="-1" role="dialog" id="server-down" data-buttonclass="server-down-btn">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="close server-down-btn" data-return="close" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                        <p>The server did not respond. Check your internet connection and try again.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary btn-grn server-down-btn" data-return="retry">Try Again</button>
+                        <button type="button" class="btn btn-secondary btn-amb server-down-btn" data-return="close">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class='container'>
             <div id='welcome-row' class='row'>
                 <div class='col-md-12'>
@@ -32,13 +48,13 @@
                                     <label for="upload-title" class="frm-field">Image Title</label>
                                         <input name='title' type='text' id='upload-title'><br>
                                     <label for="upload-file" class="frm-field">Choose File</label>
-                                        <input name="file" type="file" id="upload-file">
+                                        <input name="file" type="file" id="upload-file" accept="image/*">
                                         <div class="btn-block">
                                             <button class='icon-btn' id='upload-file-btn' type="button">
                                                 <i class="material-icons">attach_file</i>
                                             </button>
                                         </div>
-                                        <label for="upload-file" class="frm-field" id="upload-file-name"></label><br>
+                                        <label for="upload-file" class="frm-field file-prev" id="upload-file-name"></label><br>
                                     <label for="upload-edit-pass" class="frm-field">Editing Passcode</label>
                                         <input size="26" name='edit-pass' type='text' id='upload-edit-pass' readonly>
                                         <div class="btn-block">
@@ -87,7 +103,7 @@
                                             </div><br>
                                     </div>
                                 </div>
-                                <input type='submit' value='Upload' id='upload-submit'>
+                                <input type='submit' value='Upload' id='upload-submit' class='btn-grn'>
                             </form>
                         </div>
                         <div class='col-md-6'>
@@ -99,16 +115,13 @@
                                     <span class="frm-field">Passcode</span>
                                         <input size="26" name='view-pass' type='text' id='view-view-pass'><br>
                                 </div>
-                                <input type='submit' value='View' id='view-submit'>
+                                <input type='submit' value='View' id='view-submit' class="btn-grn">
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- Bootstrap js -->
-        <!-- <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script> -->
 
         <!-- JS -->
         <script src="js/main.js"></script>
