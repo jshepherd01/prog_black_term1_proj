@@ -69,7 +69,7 @@
                                         <input name='priv' checked type='checkbox' id='upload-priv'>
                                         <div class="btn-block">
                                             <button class='icon-btn' id='upload-priv-tog' type="button">
-                                                <i class="material-icons">check</i>
+                                                <i class="material-icons" id='upload-priv-msg'>check</i>
                                             </button>
                                         </div><br>
                                     <div id='upload-view-pass-container'>
@@ -84,11 +84,8 @@
                                                 </button>
                                             </div><br>
                                     </div>
-                                    <label class="frm-field">
-                                        <button class='clps-btn' id='clps-btn-upload' type="button">
-                                            Show More Options
-                                        </button>
-                                    </label><br>
+                                    <label class="frm-field clps-btn" for="clps-btn-upload" id='clps-upload-msg'>Show More Options</label>
+                                        <input type='checkbox' id='clps-btn-upload'><br>
                                     <div class='clps-frm hide' id='clps-frm-upload'>
                                         <label for="upload-author" class="frm-field">Author Name</label>
                                             <input name='author' type='text' id='upload-author'><br>
@@ -98,7 +95,7 @@
                                             <input name='nsfw' type='checkbox' id='upload-nsfw'>
                                             <div class="btn-block">
                                                 <button class='icon-btn' id='upload-nsfw-tog' type="button">
-                                                    <i class="material-icons">close</i>
+                                                    <i class="material-icons" id='upload-nsfw-msg'>close</i>
                                                 </button>
                                             </div><br>
                                     </div>

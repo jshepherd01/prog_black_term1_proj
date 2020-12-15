@@ -133,6 +133,11 @@ input[type="text"]:hover, input[type="text"]:focus, .clps-btn:hover, .clps-btn:f
     border-color: green;
 }
 
+.invalid, .invalid+.btn-block>.icon-btn, .invalid+.btn-block>.icon-btn {
+    color: red !important;
+    border-color: red !important;
+}
+
 input[type="checkbox"] {
     display: none;
 }
@@ -163,7 +168,7 @@ input[type="submit"] {
     opacity: inherit;
 }
 
-input[type="submit"]:hover, input[type="submit"]:focus, .btn:hover, .btn:focus {
+input[type="submit"]:hover:enabled, input[type="submit"]:focus, .btn:hover:enabled, .btn:focus {
     color: white;
 }
 
@@ -172,7 +177,7 @@ input[type="submit"]:hover, input[type="submit"]:focus, .btn:hover, .btn:focus {
     border: 2px solid green;
 }
 
-.btn-grn:hover, .btn-grn:focus {
+.btn-grn:hover:enabled, .btn-grn:focus {
     background-color: green;
 }
 
@@ -181,7 +186,7 @@ input[type="submit"]:hover, input[type="submit"]:focus, .btn:hover, .btn:focus {
     border: 2px solid #ff7e00;
 }
 
-.btn-amb:hover, .btn-amb:focus {
+.btn-amb:hover:enabled, .btn-amb:focus {
     background-color: #ff7e00;
 }
 
@@ -190,7 +195,7 @@ input[type="submit"]:hover, input[type="submit"]:focus, .btn:hover, .btn:focus {
     border: 2px solid red;
 }
 
-.btn-red:hover, .btn-red:focus {
+.btn-red:hover:enabled, .btn-red:focus {
     background-color: red;
 }
 
@@ -227,8 +232,6 @@ input[type="submit"]:hover, input[type="submit"]:focus, .btn:hover, .btn:focus {
 }
 
 .clps-btn {
-    all: inherit;
     border-bottom: 2px solid #bfbfbf;
     cursor: pointer;
-    margin: 0;
 }
