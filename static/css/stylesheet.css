@@ -27,6 +27,16 @@ body {
     border-color: #363636;
 }
 
+.info-content p {
+    text-align: left;
+    font-size: 1em;
+}
+
+.info-content p .material-icons {
+    vertical-align: middle;
+    color: green;
+}
+
 .container {
     border: 1px solid #363636;
     border-radius: 0 0 8px 8px;
@@ -115,6 +125,10 @@ button:focus, input:focus {
     margin-top: 0.3em;
     margin-left: -0.5em;
     display: inline-block;
+}
+
+.info {
+    float: right;
 }
 
 .file-prev {

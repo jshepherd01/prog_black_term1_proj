@@ -10,37 +10,24 @@ function genPass() {
     return btoa(String.fromCharCode.apply(null,buf));
 }
 
-function displayPopup(element) {
+function displayPopup(popupId, cb) {
     /* Display the specified modal */
-    return new Promise ((resolve, reject) => {
-        try {
-            // get a list of buttons in the modal
-            let buttonList = Array.from(document.getElementsByClassName(element.getAttribute('data-buttonclass')));
-            
-            // create an event handler for each button
-            let handler = event => {
-                let trigger = event.trigger;
-
-                // hide the modal
-                element.classList.add('hide');
-
-                // remove these handlers from all buttons in the modal
-                buttonList.forEach((i) => {i.removeEventListener('click', handler)});
-
-                // resolve the promise, returning a value depending on which button was clicked
-                resolve(trigger.getAttribute('data-return'));
-            };
-            // add the handlers to the buttons
-            buttonList.forEach((i) => {i.addEventListener('click', handler)});
-
-            // display the modal
-            element.classList.remove('hide');
-        } catch (err) {
-            // if there were any errors, trigger the promise's .catch() block
-            reject(err);
-        }
-    });
+    
+    const modal = document.getElementById(popupId); // get the modal
+    let buttonList = Array.from(document.getElementsByClassName(modal.getAttribute('data-buttonclass'))); // get a list of buttons in the modal
+    
+    let handler = event => { // create an event handler for each button
+        let trigger = event.currentTarget; // get the button that was clicked
+        modal.classList.add('hide'); // hide the modal
+        buttonList.forEach((i) => {i.removeEventListener('click', handler)}); // remove the handler from each button
+        cb(trigger.getAttribute('data-return')); // pass the button's return value to the callback
+    };
+   
+    buttonList.forEach((i) => {i.addEventListener('click', handler)});  // attach the handler to each button
+    modal.classList.remove('hide'); // display the modal
 }
+
+const nop = ()=>{}; // do nothing (e.g. for callbacks)
 
 /* error definitions */
 class ValidationError extends Error {
@@ -69,17 +56,15 @@ class ConnectionError extends Error {
 }
 
 /* element references */
-// this is an absolute mess. TODO: clean this shit up
+
+/* upload form */
 const dropUpload = document.getElementById('drop-upload');
-const dropView = document.getElementById('drop-view');
 const frmUpload = document.getElementById('frm-upload');
-const frmView = document.getElementById('frm-view');
-const subUpload = document.getElementById('upload-submit');
-const subView = document.getElementById('view-submit');
+const infoUpload = document.getElementById('upload-info');
 const buttonUploadFile = document.getElementById('upload-file-btn');
 const inputUploadFile = document.getElementById('upload-file');
 const toggleUploadPriv = document.getElementById('upload-priv-tog');
-const checkUploadPriv = document.getElementById('upload-priv');
+const inputUploadPriv = document.getElementById('upload-priv');
 const inputUploadEditPass = document.getElementById('upload-edit-pass');
 const inputUploadViewPass = document.getElementById('upload-view-pass');
 const refreshUploadEditPass = document.getElementById('upload-edit-pass-refresh');
@@ -89,7 +74,11 @@ const copyUploadViewPass = document.getElementById('upload-view-pass-copy');
 const buttonCollapsibleUpload = document.getElementById('clps-btn-upload');
 const toggleUploadNsfw = document.getElementById('upload-nsfw-tog');
 const inputUploadNsfw = document.getElementById('upload-nsfw');
-const popupServerDown = document.getElementById('server-down');
+
+/* view form */
+const dropView = document.getElementById('drop-view');
+const frmView = document.getElementById('frm-view');
+const infoView = document.getElementById('view-info');
 
 /* define event handlers */
 const dropClick = (e, formId) => {
@@ -153,18 +142,86 @@ const copyField = (e, fieldId) => {
     document.execCommand('copy'); // copy it
 };
 
-/* add event handlers */
+const changeButtonStatus = (buttonId, color, msg, disable) => {
+    /* change the status of a submit button */
 
+    const button = document.getElementById(buttonId); // get the button
+    if (!button.classList.contains(color)) { // if the button is a different colour...
+        button.classList.remove('btn-grn'); // remove all of the colour classes from it
+        button.classList.remove('btn-amb');
+        button.classList.remove('btn-red');
+        button.classList.add(color); // add the one we actually want
+    }
+    button.value = msg; // change the message in the button
+    button.disabled = disable; // enable or disable the button
+};
+
+const markInvalid = (formName, inputs, cb) => {
+    /* mark certain inputs of a form as invalid */
+
+    if (inputs.length > 1) { // if the issue is with multiple inputs
+        inputs.forEach((input) => {
+            let element = document.getElementById(`${formName}-${input}`); // get each one in turn
+            element.classList.add('invalid'); // mark it as invalid
+            let handler = (e) => { // create a handler for when it next changes
+                let index = inputs.indexOf(input);
+                if (index > -1) {
+                    inputs.splice(index, 1); // remove this input from the list of invalid ones
+                }
+                element.removeEventListener('change', handler); // remove this handler
+                element.classList.remove('invalid'); // and remove the 'invalid' mark
+                if (inputs.length === 0) { // if this was the last input
+                    cb(); // execute the callback function
+                }
+            };
+            element.addEventListener('change', handler); // attach the handler
+        });
+    } else { // if there was only one problem, the handler is much simpler
+        let element = document.getElementById(`${formName}-${inputs[0]}`); // get the problem input
+        element.classList.add('invalid'); // mark it as invalid
+        let handler = (e) => { // create the handler
+            element.removeEventListener('change', handler); // remove this handler
+            element.classList.remove('invalid'); // remove the invalid mark
+            cb(); // execute the callback
+        };
+        element.addEventListener('change', handler); // add this handler
+    }
+};
+
+/* attach event handlers */
+
+/* upload form */
 dropUpload.addEventListener('click', (e) => {dropClick(e, 'frm-upload')});
-dropView.addEventListener('click', (e) => {dropClick(e, 'frm-view')});
+infoUpload.addEventListener('click', (e) => displayPopup('info-upload', nop));
+buttonUploadFile.addEventListener('click', (e) => {transferClick(e, 'upload-file')});
+inputUploadFile.addEventListener('change', (e) => {fileChange(e, 'upload-file-name')});
+toggleUploadPriv.addEventListener('click', (e) => {transferClick(e, 'upload-priv')});
+inputUploadPriv.addEventListener('change', (e) => {
+    checkboxChangeMsg(e, 'upload-priv-msg', 'check', 'close');
+    checkboxChangeClps(e, 'upload-view-pass-container');
+});
+refreshUploadEditPass.addEventListener('click', (e) => {refreshGenPass(e, 'upload-edit-pass')});
+inputUploadEditPass.addEventListener('click', (e) => {transferClick(e, 'upload-edit-pass-copy')});
+copyUploadEditPass.addEventListener('click', (e) => {copyField(e, 'upload-edit-pass')});
+refreshUploadViewPass.addEventListener('click', (e) => {refreshGenPass(e, 'upload-view-pass')});
+inputUploadViewPass.addEventListener('click', (e) => {transferClick(e, 'upload-view-pass-copy')});
+copyUploadViewPass.addEventListener('click', (e) => {copyField(e, 'upload-view-pass')});
+buttonCollapsibleUpload.addEventListener('click', (e) => {
+    checkboxChangeMsg(e, 'clps-upload-msg', 'Show Fewer Options', 'Show More Options');
+    checkboxChangeClps(e, 'clps-frm-upload');
+});
+toggleUploadNsfw.addEventListener('click', (e) => {transferClick(e, 'upload-nsfw')});
+inputUploadNsfw.addEventListener('click', (e) => {checkboxChangeMsg(e, 'upload-nsfw-msg', 'check', 'close')});
 
+/* view form */
+dropView.addEventListener('click', (e) => {dropClick(e, 'frm-view')});
+infoView.addEventListener('click', (e) => displayPopup('info-view', nop));
+
+/* more complicated handlers */
 frmUpload.addEventListener('submit', (e) => {
     e.preventDefault(); // stop regular submission
 
-    subUpload.classList.remove('btn-grn'); // disable the submit button
-    subUpload.classList.add('btn-amb'); // while the code thinks about it
-    subUpload.value = 'Processing...';
-    subUpload.disabled = true;
+    changeButtonStatus('upload-submit', 'btn-amb', 'Processing...', true); // change the colour of the submit button
 
     const elements = frmUpload.elements; // get the elements in the form
     let data = new FormData(); // parse them into a FormData with some checks
@@ -172,6 +229,7 @@ frmUpload.addEventListener('submit', (e) => {
 
     /* some validation and value parsing */
     /* proper validation will happen server-side */
+    /* these are basically the things the user can do wrong without changing any HTML */
 
     if (elements['title'].value === '') {
         invalid.push('title');
@@ -179,13 +237,13 @@ frmUpload.addEventListener('submit', (e) => {
         data.append('title', elements['title'].value);
     }
 
-    // if (elements['file'].files.length !== 1) {
-    //     invalid.push('file');
-    // } else if (!elements['file'].files[0].type.startsWith('image/')) {
-    //     invalid.push('file');
-    // } else {
+    if (elements['file'].files.length !== 1) {
+        invalid.push('file');
+    } else if (!elements['file'].files[0].type.startsWith('image/')) {
+        invalid.push('file');
+    } else {
         data.append('file', elements['file'].files[0]);
-    // }
+    }
 
     data.append('view-pass', elements['priv'].checked ? elements['view-pass'].value : '');
     data.append('edit-pass', elements['edit-pass'].value);
@@ -194,27 +252,9 @@ frmUpload.addEventListener('submit', (e) => {
     data.append('nsfw', elements['nsfw'].checked);
 
     if (invalid.length !== 0) {
-        subUpload.classList.remove('btn-amb');
-        subUpload.classList.add('btn-red');
-        subUpload.value = 'Validation Error';
-
-        invalid.forEach((input) => {
-            elements[input].classList.add('invalid');
-            let handler = (e) => {
-                let index = invalid.indexOf(input);
-                if (index > -1) {
-                    invalid.splice(index,1);
-                }
-                elements[input].removeEventListener('change', handler);
-                elements[input].classList.remove('invalid');
-                if (invalid.length === 0) {
-                    subUpload.classList.remove('btn-red');
-                    subUpload.classList.add('btn-grn');
-                    subUpload.value = 'Upload';
-                    subUpload.disabled = false;
-                }
-            };
-            elements[input].addEventListener('change', handler);
+        changeButtonStatus('upload-submit', 'btn-red', 'Validation Error', true);
+        markInvalid('upload', invalid, () => {
+            changeButtonStatus('upload-submit','btn-grn','Upload', false);
         });
         return;
     }
@@ -227,29 +267,24 @@ frmUpload.addEventListener('submit', (e) => {
     }).then(resp => {
         switch (resp.status) {
             case 200:
-                return resp.json();
             case 400:
-                throw new ValidationError('An input was invalid');
+                return resp.json();
             default:
                 throw new ServerError('An unspecified error occurred.');
         }
     }).then (data => {
-        subUpload.classList.remove('btn-amb');
-        subUpload.classList.add('btn-grn');
-        subUpload.value = 'Upload';
-        subUpload.disabled = false;
+        if (data['error-type'] == 'ValidationError') {
+            throw new ValidationError(data.invalid);
+        }
+        changeButtonStatus('upload-submit','btn-grn','Upload',false);
+        // TODO
         console.log(data);
     }).catch(err => {
         switch (err.name) {
-            case 'ConnectionError':
-                subUpload.classList.remove('btn-amb');
-                subUpload.classList.add('btn-red');
-                subUpload.value = 'Connection Error';
-                displayPopup(popupServerDown).then((ret) => {
-                    subUpload.classList.remove('btn-red');
-                    subUpload.classList.add('btn-grn');
-                    subUpload.value = 'Upload';
-                    subUpload.disabled = false;
+            case 'ConnectionError': {
+                changeButtonStatus('upload-submit','btn-red','Connection Error',true);
+                displayPopup('server-down', (ret) => {
+                    changeButtonStatus('upload-submit','btn-grn','Upload',false);
                     if (ret === 'retry') {
                         // officially this should use SubmitEvent, but that isn't fully supported
                         // Event isn't fully supported either but that's just IE so it can do one
@@ -257,67 +292,37 @@ frmUpload.addEventListener('submit', (e) => {
                     }
                 });
                 break;
-            case 'ValidationError':
-                subUpload.classList.remove('btn-amb');
-                subUpload.classList.add('btn-red');
-                subUpload.value = 'Validation Error';
-
-                invalid.forEach((input) => {
-                    elements[input].classList.add('invalid');
-                    let handler = (e) => {
-                        let index = invalid.indexOf(input);
-                        if (index > -1) {
-                            invalid.splice(index,1);
-                        }
-                        elements[input].removeEventListener('change', handler);
-                        elements[input].classList.remove('invalid');
-                        if (invalid.length === 0) {
-                            subUpload.classList.remove('btn-red');
-                            subUpload.classList.add('btn-grn');
-                            subUpload.value = 'Upload';
-                            subUpload.disabled = false;
-                        }
-                    };
-                    elements[input].addEventListener('change', handler);
+            }
+            case 'ServerError': {
+                changeButtonStatus('upload-submit','btn-red','Server Error',true);
+                displayPopup('server-error', (ret) => {
+                    changeButtonStatus('upload-submit','btn-grn','Upload',false);
+                    if (ret === 'retry') {
+                        // officially this should use SubmitEvent, but that isn't fully supported
+                        // Event isn't fully supported either but that's just IE so it can do one
+                        frmUpload.dispatchEvent(new Event('submit'));
+                    }
                 });
                 break;
+            }
+            case 'ValidationError': {
+                changeButtonStatus('upload-submit', 'btn-red', 'Validation Error', true);
+                markInvalid('upload', [err.message], () => {
+                    changeButtonStatus('upload-submit','btn-grn','Upload', false);
+                });
+                break;
+            }
             default:
                 break;
         }
     });
 });
 
-buttonUploadFile.addEventListener('click', (e) => {transferClick(e, 'upload-file')});
+frmView.addEventListener('submit', (e) => {
+    e.preventDefault();
 
-inputUploadFile.addEventListener('change', (e) => {fileChange(e, 'upload-file-name')});
-
-toggleUploadPriv.addEventListener('click', (e) => {transferClick(e, 'upload-priv')});
-
-checkUploadPriv.addEventListener('change', (e) => {
-    checkboxChangeMsg(e, 'upload-priv-msg', 'check', 'close');
-    checkboxChangeClps(e, 'upload-view-pass-container');
+    // TODO
 });
-
-refreshUploadEditPass.addEventListener('click', (e) => {refreshGenPass(e, 'upload-edit-pass')});
-
-inputUploadEditPass.addEventListener('click', (e) => {transferClick(e, 'upload-edit-pass-copy')});
-
-copyUploadEditPass.addEventListener('click', (e) => {copyField(e, 'upload-edit-pass')});
-
-refreshUploadViewPass.addEventListener('click', (e) => {refreshGenPass(e, 'upload-view-pass')});
-
-inputUploadViewPass.addEventListener('click', (e) => {transferClick(e, 'upload-view-pass-copy')});
-
-copyUploadViewPass.addEventListener('click', (e) => {copyField(e, 'upload-edit-pass')});
-
-buttonCollapsibleUpload.addEventListener('click', (e) => {
-    checkboxChangeMsg(e, 'clps-upload-msg', 'Show Fewer Options', 'Show More Options');
-    checkboxChangeClps(e, 'clps-frm-upload');
-});
-
-toggleUploadNsfw.addEventListener('click', (e) => {transferClick(e, 'upload-nsfw')});
-
-inputUploadNsfw.addEventListener('click', (e) => {checkboxChangeMsg(e, 'upload-nsfw-msg', 'check', 'close')});
 
 /* load event */
 window.addEventListener('load', (e) => {

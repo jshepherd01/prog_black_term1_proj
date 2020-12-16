@@ -9,7 +9,7 @@
         <link rel="stylesheet" href="css/bootstrap.min.css">
 
         <!-- Material Icons -->
-        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined" rel="stylesheet">
 
         <!-- CSS -->
         <link rel="stylesheet" href="css/stylesheet.css">
@@ -31,6 +31,60 @@
                 </div>
             </div>
         </div>
+        <div class="modal hide" tabindex="-1" role="dialog" id="server-error" data-buttonclass="server-error-btn">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="close server-error-btn" data-return="close" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                        <p>There was an issue with the server. Please try again later.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary btn-grn server-error-btn" data-return="retry">Try Again</button>
+                        <button type="button" class="btn btn-secondary btn-amb server-error-btn" data-return="close">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal hide" tabindex="-1" role="dialog" id="info-upload" data-buttonclass="info-upload-btn">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body info-content">
+                        <button type="button" class="close info-upload-btn" data-return="close" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                        <p><strong>Image Title:</strong> the title that will be displayed above your image on this site. <strong>Required</strong>.</p>
+                        <p><strong>Choose File:</strong> the image file you want to upload. Also <strong>required</strong>.</p>
+                        <p><strong>Editing Passcode:</strong> the passcode you'll need to use if you want to edit your image in the future, so make a note of it. You can click <i class="material-icons">content_copy</i> to copy your passcode or <i class="material-icons">refresh</i> to create a new one.</p>
+                        <p><strong>Private:</strong> <i class="material-icons">close</i> means anyone can see your image, and <i class="material-icons">check</i> means you (and anyone else) will need the <strong>Viewing Passcode</strong>.</p>
+                        <p>More Options:</p>
+                        <p><strong>Author Name:</strong> the name, username or tag that you want to be associated with your image. You can leave this blank, if you'd prefer to stay anonymous.</p>
+                        <p><strong>Copyright Information:</strong> the type of copyright license on this image. By default all images uploaded are owned by you, but here you can give other people permission to use the image or allow them to contact you to ask for permission.</p>
+                        <p><strong>Mark as NSFW:</strong> <i class="material-icons">check</i> means the image is marked as being 'not safe for work', which means users of this site will be warned before viewing the image that it may contain graphic content. If your image contains gore, nudity or anything else you wouldn't want your kids seeing, <strong>make sure</strong> to check this box.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary btn-grn info-upload-btn" data-return="okay">Okay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal hide" tabindex="-1" role="dialog" id="info-view" data-buttonclass="info-view-btn">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body info-content">
+                        <button type="button" class="close info-view-btn" data-return="close" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                        <p><strong>Image ID:</strong> the unique identifier for the image you want to view. We have a lot of images, and we'll need this to find the right one.</p>
+                        <p><strong>Passcode:</strong> if the image you want to view is <strong>private</strong>, you'll need to enter its viewing passcode to carry on. If it isn't, feel free to just leave this blank.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary btn-grn info-view-btn" data-return="okay">Okay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class='container'>
             <div id='welcome-row' class='row'>
                 <div class='col-md-12'>
@@ -43,8 +97,11 @@
                     <div class='row'>
                         <div class='col-md-6'>
                             <button class="drop-btn" id="drop-upload">Upload an image</button>
-                            <form class="drop-frm" id="frm-upload">
+                            <form class="drop-frm" id="frm-upload" autocomplete="off">
                                 <div class="drop-frm-fields">
+                                    <button class="info icon-btn" type="button" id="upload-info">
+                                        <i class="material-icons-outlined">info</i>
+                                    </button>
                                     <label for="upload-title" class="frm-field">Image Title</label>
                                         <input name='title' type='text' id='upload-title'><br>
                                     <label for="upload-file" class="frm-field">Choose File</label>
@@ -107,6 +164,9 @@
                             <button class="drop-btn" id="drop-view">View an image</button>
                             <form class="drop-frm" id="frm-view">
                                 <div class="drop-frm-fields">
+                                    <button class="info icon-btn" type="button" id="view-info">
+                                        <i class="material-icons-outlined">info</i>
+                                    </button>
                                     <span class="frm-field">Image ID</span>
                                         <input name='id' type='text' id='view-id'><br>
                                     <span class="frm-field">Passcode</span>

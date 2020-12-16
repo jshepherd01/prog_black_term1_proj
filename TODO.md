@@ -1,10 +1,9 @@
 # Front End
 
-- Add tooltips to first forms
-- Send form data
-- Add additional forms
-- Fetch functionality
+- Functionality to View form
+- Move to view panel and clear Upload form on successful upload
 
 # Back End
 
-- Everything
+- Clean up existing code
+- Better error handling, with different mimetypes of response (HTML, JSON, image)
