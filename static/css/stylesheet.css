@@ -16,6 +16,7 @@ body {
 
 .modal {
     display: block;
+    overflow: auto;
 }
 
 .modal-content {
@@ -37,11 +38,11 @@ body {
     color: green;
 }
 
-.container {
+.container>.row {
     border: 1px solid #363636;
-    border-radius: 0 0 8px 8px;
-    border-top-width: 0;
+    border-radius: 8px;
     color: #bfbfbf;
+    margin-top: 15px;
 }
 
 .col-md-6 {
@@ -85,6 +86,10 @@ p {
     padding: 1em 0;
     background-color: #1c1c1c;
     border: 2px solid green;
+}
+
+.drop-btn-small {
+    padding: 0.3em 0;
 }
 
 .drop-btn-open {
