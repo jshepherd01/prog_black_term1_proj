@@ -1,21 +1,14 @@
 # Front End
 
-- Refactor
-- Code to populate view panel
-- Proper styling on view panel
-- Pop-up image ID, view pass, edit pass on successful upload
-- Populate view panel on successful upload
-- Clear upload form on successful upload
-- Functionality to unlock edit form
-- Edit form
+- Refactor everything
+- Edit form - hide until unlock succeeds, prepopulate fields and use data-id and data-edit-pass attributes
 - Comments section
 
 # Back End
 
-- Call to verify an edit passcode
 - Call to edit data of an image
 - Call to go directly to viewing an image when using GET paramaters
 
 # Misc
 - HTML error pages
-- Jest testing
+- Jest testing - work out how to test file upload

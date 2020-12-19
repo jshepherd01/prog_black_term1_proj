@@ -69,6 +69,42 @@
                 </div>
             </div>
         </div>
+        <div class="modal hide" tabindex="-1" role="dialog" id="success-upload" data-buttonclass="success-upload-btn">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="close success-upload-btn" data-return="close" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                        <p>Your image was uploaded successfully.</p>
+                        <p>You'll need this information to access your image again, so make sure you save it somewhere!</p>
+                        <p>ID:
+                            <span id="success-upload-id"></span>
+                            <button type="button" class="icon-btn" id="success-upload-id-copy">
+                                <i class="material-icons">content_copy</i>
+                            </button>
+                        </p>
+                        <p>Edit Passcode:
+                            <span id="success-upload-edit-pass"></span>
+                            <button type="button" class="icon-btn" id="success-upload-edit-copy">
+                                <i class="material-icons">content_copy</i>
+                            </button>
+                        </p>
+                        <p id="success-upload-view-pass-container">View Passcode:
+                            <span id="success-upload-view-pass"></span>
+                            <button type="button" class="icon-btn" id="success-upload-view-copy">
+                                <i class="material-icons">content_copy</i>
+                            </button>
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary btn-grn" id="success-upload-download">Download</button>
+                        <button type="button" class="btn btn-secondary btn-amb success-upload-btn" data-return="display">Show Image</button>
+                        <button type="button" class="btn btn-secondary btn-amb success-upload-btn" data-return="close">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="modal hide" tabindex="-1" role="dialog" id="info-view" data-buttonclass="info-view-btn">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -81,6 +117,23 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-primary btn-grn info-view-btn" data-return="okay">Okay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal hide" tabindex="-1" role="dialog" id="nsfw-view" data-buttonclass="nsfw-view-btn">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="close nsfw-view-btn" data-return="cancel" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                        <p>This image may contain graphic content.</p>
+                        <p>By clicking <strong>continue</strong> you confirm that you are over the age of 18 and are willing to view this image.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary btn-grn nsfw-view-btn" data-return="confirm">Continue</button>
+                        <button type="button" class="btn btn-secondary btn-red nsfw-view-btn" data-return="cancel">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -193,12 +246,15 @@
                     </div>
                 </div>
             </div>
-            <div id="image-display-row" class="row">
+            <div id="image-display-row" class="row hide">
                 <div class="col-md-8">
+                    <div class="icon-float-left" id="display-priv">
+                        <i class="material-icons">lock</i>
+                    </div>
                     <h2 id="display-title">Placeholder Title</h2>
                     <img id="display-image" alt="Placeholder">
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-4 display-sidebar">
                     <p id="display-author">Published by <span>Author McAuthorson</span></p>
                     <p id="display-copyright">Copyright: <span>Copyright Information</span></p>
                     <button class="drop-btn drop-btn-small" id="drop-unlock">Edit this image</button>

@@ -3,6 +3,7 @@
 body {
     background-color: #1c1c21;
     font-family: 'Open Sans', sans-serif;
+    padding-bottom: 15px;
 }
 
 .popup-outer {
@@ -226,6 +227,11 @@ input[type="submit"]:hover:enabled, input[type="submit"]:focus, .btn:hover:enabl
     padding: 0;
 }
 
+.icon-float-left {
+    float: left;
+    font-size: 2em;
+}
+
 .material-icons {
     font-size: inherit;
     vertical-align: text-bottom;
@@ -253,4 +259,14 @@ input[type="submit"]:hover:enabled, input[type="submit"]:focus, .btn:hover:enabl
 .clps-btn {
     border-bottom: 2px solid #bfbfbf;
     cursor: pointer;
+}
+
+#display-image {
+    display: block;
+    max-width: 100%;
+    margin: 1em auto;
+}
+
+.display-sidebar {
+    padding-top: 15px;
 }
