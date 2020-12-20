@@ -146,9 +146,25 @@
                             <i class="material-icons">close</i>
                         </button>
                         <p>We can't just let anyone change whatever they want - you will need this image's <strong>editing passcode</strong> to unlock it for editing.</p>
+                        <p>Once you do, you'll be able to change the image's title, author and copyright information, make it public or private, mark it as NSFW, replace it with a different image or delete the image entirely.</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-primary btn-grn info-unlock-btn" data-return="okay">Okay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal hide" tabindex="-1" role="dialog" id="info-update" data-buttonclass="info-update-btn">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body info-content">
+                        <button type="button" class="close info-update-btn" data-return="close" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                        <p>Some information gose eherre im tiredp</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary btn-grn info-update-btn" data-return="okay">Okay</button>
                     </div>
                 </div>
             </div>
@@ -235,9 +251,9 @@
                                     <button class="info icon-btn" type="button" id="view-info">
                                         <i class="material-icons-outlined">info</i>
                                     </button>
-                                    <span class="frm-field">Image ID</span>
+                                    <label for="view-id" class="frm-field">Image ID</label>
                                         <input size="26" name='id' type='text' id='view-id'><br>
-                                    <span class="frm-field">Passcode</span>
+                                    <label for="view-view-pass" class="frm-field">Passcode</label>
                                         <input size="26" name='view-pass' type='text' id='view-view-pass'><br>
                                 </div>
                                 <input type='submit' value='View' id='view-submit' class="btn-grn">
@@ -251,22 +267,81 @@
                     <div class="icon-float-left" id="display-priv">
                         <i class="material-icons">lock</i>
                     </div>
-                    <h2 id="display-title">Placeholder Title</h2>
+                    <h2 id="display-title"></h2>
                     <img id="display-image" alt="Placeholder">
                 </div>
                 <div class="col-md-4 display-sidebar">
-                    <p id="display-author">Published by <span>Author McAuthorson</span></p>
-                    <p id="display-copyright">Copyright: <span>Copyright Information</span></p>
-                    <button class="drop-btn drop-btn-small" id="drop-unlock">Edit this image</button>
+                    <p id="display-author">Published by <span></span></p>
+                    <p id="display-copyright">Copyright: <span></span></p>
+                    <button class="drop-btn drop-btn-small" id="drop-unlock">Change this image</button>
                     <form class="drop-frm" id="frm-unlock">
                         <div class="drop-frm-fields">
                             <button class="info icon-btn" type="button" id="unlock-info">
                                 <i class="material-icons-outlined">info</i>
                             </button>
-                            <span class="frm-field">Passcode</span>
+                            <label for="unlock-edit-pass" class="frm-field">Passcode</label>
                                 <input size="26" name='edit-pass' type='text' id='unlock-edit-pass'><br>
                         </div>
                         <input type='submit' value='Unlock' id='unlock-submit' class="btn-grn">
+                    </form>
+                    <button class="drop-btn drop-btn-small drop-btn-open hide" id="drop-update">Change this image</button>
+                    <form class="drop-frm drop-frm-open hide" id="frm-update">
+                        <div class="drop-frm-fields">
+                            <button class="info icon-btn" type="button" id="update-info">
+                                <i class="material-icons-outlined">info</i>
+                            </button>
+                            <label for="update-title" class="frm-field">Change Title</label>
+                                <input name='title' type='text' id='update-title'><br>
+                            <label for="update-file" class="frm-field">Change Image</label>
+                                <input name="file" type="file" id="update-file" accept="image/*">
+                                <div class="btn-block">
+                                    <button class='icon-btn' id='update-file-btn' type="button">
+                                        <i class="material-icons">attach_file</i>
+                                    </button>
+                                    <button class="icon-btn" id="update-file-clear" type="button">
+                                        <i class="material-icons">clear</i>
+                                    </button>
+                                </div>
+                                <label for="update-file" class="frm-field file-prev" id="update-file-name"></label><br>
+                            <label for="update-priv" class="frm-field">Private</label>
+                                <input name='priv' checked type='checkbox' id='update-priv'>
+                                <div class="btn-block">
+                                    <button class='icon-btn' id='update-priv-tog' type="button">
+                                        <i class="material-icons" id='update-priv-msg'>check</i>
+                                    </button>
+                                </div><br>
+                            <div id='update-view-pass-container'>
+                                <label for="update-view-pass" class="frm-field">Viewing Passcode</label>
+                                    <input size="26" name='view-pass' type='text' id='update-view-pass' readonly>
+                                    <div class="btn-block">
+                                        <button class='icon-btn' id='update-view-pass-copy' type="button">
+                                            <i class="material-icons">content_copy</i>
+                                        </button>
+                                        <button class='icon-btn' id='update-view-pass-refresh' type="button">
+                                            <i class="material-icons">refresh</i>
+                                        </button>
+                                        <button class="icon-btn" id='update-view-pass-clear' type="button">
+                                            <i class="material-icons">clear</i>
+                                        </button>
+                                    </div><br>
+                            </div>
+                            <label class="frm-field clps-btn" for="clps-btn-update" id='clps-update-msg'>Show More Options</label>
+                                <input type='checkbox' id='clps-btn-update'><br>
+                            <div class='clps-frm hide' id='clps-frm-update'>
+                                <label for="update-author" class="frm-field">Author Name</label>
+                                    <input name='author' type='text' id='update-author'><br>
+                                <label for="update-copyright" class="frm-field">Copyright Information</label>
+                                    <input name='copyright' type='text' id='update-copyright'><br>
+                                <label for="update-nsfw" class="frm-field">Mark as NSFW</label>
+                                    <input name='nsfw' type='checkbox' id='update-nsfw'>
+                                    <div class="btn-block">
+                                        <button class='icon-btn' id='update-nsfw-tog' type="button">
+                                            <i class="material-icons" id='update-nsfw-msg'>close</i>
+                                        </button>
+                                    </div><br>
+                            </div>
+                        </div>
+                        <input type='submit' value='Update' id='update-submit' class="btn-grn">
                     </form>
                     <!-- <div id="display-comments-list">
                         

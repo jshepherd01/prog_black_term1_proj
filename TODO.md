@@ -1,12 +1,15 @@
 # Front End
 
 - Refactor everything
-- Edit form - hide until unlock succeeds, prepopulate fields and use data-id and data-edit-pass attributes
+- Update form functionality
+- info-update modal
+- Update form 'delete' button - confirmation modal
 - Comments section
 
 # Back End
 
 - Call to edit data of an image
+- Call to delete an image
 - Call to go directly to viewing an image when using GET paramaters
 
 # Misc
