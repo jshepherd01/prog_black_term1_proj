@@ -39,6 +39,10 @@ body {
     color: green;
 }
 
+.info-content p .red {
+    color: red;
+}
+
 .container>.row {
     border: 1px solid #363636;
     border-radius: 8px;
@@ -188,7 +192,7 @@ input[type="submit"] {
     opacity: inherit;
 }
 
-input[type="submit"]:hover:enabled, input[type="submit"]:focus, .btn:hover:enabled, .btn:focus {
+input[type="submit"]:hover:enabled, input[type="submit"]:focus, .btn:hover:enabled, .btn:focus, .btn-full:hover:enabled, .btn-full:focus {
     color: white;
 }
 
@@ -259,6 +263,11 @@ input[type="submit"]:hover:enabled, input[type="submit"]:focus, .btn:hover:enabl
 .clps-btn {
     border-bottom: 2px solid #bfbfbf;
     cursor: pointer;
+}
+
+.btn-full {
+    width: 100%;
+    background-color: #1c1c1c;
 }
 
 #display-image {

@@ -161,10 +161,43 @@
                         <button type="button" class="close info-update-btn" data-return="close" aria-label="Close">
                             <i class="material-icons">close</i>
                         </button>
-                        <p>Some information gose eherre im tiredp</p>
+                        <p>You can change your image's <strong>title</strong>, <strong>viewing passcode</strong>, <strong>author name</strong> and more by changing them here and clicking <strong>Update</strong>.</p>
+                        <p>If you choose <i class="material-icons">attach_file</i> a new image or generate <i class="material-icons">refresh</i> a new passcode and then change your mind, you can use <i class="material-icons">close</i> to reset it.</p>
+                        <p>If you want to remove your image entirely, use <strong class="red">Delete Image</strong>, but be aware that this cannot be undone.</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-primary btn-grn info-update-btn" data-return="okay">Okay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal hide" tabindex="-1" role="dialog" id="delete-confirm" data-buttonclass="delete-confirm-btn">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="close delete-confirm-btn" data-return="cancel" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                        <p>You are about to delete this image. This action cannot be undone.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary btn-red delete-confirm-btn" data-return="confirm">Delete Image</button>
+                        <button type="button" class="btn btn-secondary btn-amb delete-confirm-btn" data-return="cancel">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal hide" tabindex="-1" role="dialog" id="delete-success" data-buttonclass="delete-success-btn">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <button type="button" class="close delete-success-btn" data-return="cancel" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                        <p>Your image was successfully deleted.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary btn-grn delete-success-btn" data-return="okay">Okay</button>
                     </div>
                 </div>
             </div>
@@ -286,6 +319,7 @@
                     </form>
                     <button class="drop-btn drop-btn-small drop-btn-open hide" id="drop-update">Change this image</button>
                     <form class="drop-frm drop-frm-open hide" id="frm-update">
+                        <button type="button" class="btn-full btn-red" id='update-delete'>Delete Image</button>
                         <div class="drop-frm-fields">
                             <button class="info icon-btn" type="button" id="update-info">
                                 <i class="material-icons-outlined">info</i>

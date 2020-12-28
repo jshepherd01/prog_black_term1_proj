@@ -1,40 +1,9 @@
-/* Global image property */
-var currentImage = {};
+/*
+    === error definitions ===
+*/
 
-/* function definitions */
-function genPass() {
-    /* Generate a cryptographically random passcode */
-
-    // get 18 random numerical values
-    let buf = new Uint8Array(18);
-    window.crypto.getRandomValues(buf);
-
-    // convert the values to base64 ([a-zA-Z0-9+/])
-    return btoa(String.fromCharCode.apply(null,buf));
-}
-
-function displayPopup(popupId, cb) {
-    /* Display the specified modal */
-    
-    const modal = document.getElementById(popupId); // get the modal
-    let buttonList = Array.from(document.getElementsByClassName(modal.getAttribute('data-buttonclass'))); // get a list of buttons in the modal
-    
-    let handler = event => { // create an event handler for each button
-        let trigger = event.currentTarget; // get the button that was clicked
-        modal.classList.add('hide'); // hide the modal
-        buttonList.forEach((i) => {i.removeEventListener('click', handler)}); // remove the handler from each button
-        cb(null, trigger.getAttribute('data-return')); // pass the button's return value to the callback
-    };
-   
-    buttonList.forEach((i) => {i.addEventListener('click', handler)});  // attach the handler to each button
-    modal.classList.remove('hide'); // display the modal
-}
-
-const nop = ()=>{}; // do nothing (e.g. for callbacks)
-
-/* error definitions */
 class ServerError extends Error {
-    /* for when the server returns any code except 2XX */
+    /* for when the server returns any 4XX or 5XX code */
     constructor(message, status, details) {
         super(message);
         this.name = 'ServerError';
@@ -51,237 +20,256 @@ class ConnectionError extends Error {
     }
 }
 
-/* element references */
+/*
+    === globals ===
+*/
 
-/* upload form */
-const dropUpload = document.getElementById('drop-upload');
-const frmUpload = document.getElementById('frm-upload');
-const infoUpload = document.getElementById('upload-info');
-const buttonUploadFile = document.getElementById('upload-file-btn');
-const inputUploadFile = document.getElementById('upload-file');
-const toggleUploadPriv = document.getElementById('upload-priv-tog');
-const inputUploadPriv = document.getElementById('upload-priv');
-const inputUploadEditPass = document.getElementById('upload-edit-pass');
-const inputUploadViewPass = document.getElementById('upload-view-pass');
-const refreshUploadEditPass = document.getElementById('upload-edit-pass-refresh');
-const copyUploadEditPass = document.getElementById('upload-edit-pass-copy');
-const refreshUploadViewPass = document.getElementById('upload-view-pass-refresh');
-const copyUploadViewPass = document.getElementById('upload-view-pass-copy');
-const buttonCollapsibleUpload = document.getElementById('clps-btn-upload');
-const toggleUploadNsfw = document.getElementById('upload-nsfw-tog');
-const inputUploadNsfw = document.getElementById('upload-nsfw');
+let currentImage = {};
 
-/* successful upload modal */
-const successDisplayID = document.getElementById('success-upload-id');
-const successDisplayEdit = document.getElementById('success-upload-edit-pass');
-const successDisplayView = document.getElementById('success-upload-view-pass');
-const successCopyID = document.getElementById('success-upload-id-copy');
-const successCopyEdit = document.getElementById('success-upload-edit-copy');
-const successCopyView = document.getElementById('success-upload-view-copy');
-const successDownload = document.getElementById('success-upload-download');
+/*
+    === functions ===
+*/
 
-/* view form */
-const dropView = document.getElementById('drop-view');
-const frmView = document.getElementById('frm-view');
-const infoView = document.getElementById('view-info');
+const genPass = () => {
+    /* generate a cryptographically random passcode */
 
-/* unlock form */
-const dropUnlock = document.getElementById('drop-unlock');
-const frmUnlock = document.getElementById('frm-unlock');
-const infoUnlock = document.getElementById('unlock-info');
+    let buf = new Uint8Array(18); // get 18 random numerical values
+    window.crypto.getRandomValues(buf);
+    return btoa(String.fromCharCode.apply(null,buf)); // convert the values to base64 ([a-zA-Z0-9+/])
+};
 
-/* update form */
-const dropUpdate = document.getElementById('drop-update');
-const frmUpdate = document.getElementById('frm-update');
-const infoUpdate = document.getElementById('update-info');
-const buttonUpdateFile = document.getElementById('update-file-btn');
-const inputUpdateFile = document.getElementById('update-file');
-const clearUpdateFile = document.getElementById('update-file-clear');
-const toggleUpdatePriv = document.getElementById('update-priv-tog');
-const inputUpdatePriv = document.getElementById('update-priv');
-const inputUpdateViewPass = document.getElementById('update-view-pass');
-const refreshUpdateViewPass = document.getElementById('update-view-pass-refresh');
-const copyUpdateViewPass = document.getElementById('update-view-pass-copy');
-const clearUpdateViewPass = document.getElementById('update-view-pass-clear');
-const buttonCollapsibleUpdate = document.getElementById('clps-btn-update');
-const toggleUpdateNsfw = document.getElementById('update-nsfw-tog');
-const inputUpdateNsfw = document.getElementById('update-nsfw');
+/*
+    === subroutines ===
+*/
 
-/* define event handlers */
-const dropClick = (e, formId) => {
-    /* handles clicks on form header buttons */
+/* no operation - to differentiate 'nothing' from 'not written yet' */
+const nop = ()=>{};
 
-    const trigger = e.currentTarget; // get the button
-    const form = document.getElementById(formId); // and the form
+/* form actions */
+const hideForm = (formName, hide=true) => {
+    /* hides (default) or shows a form */
 
-    if (trigger.classList.contains('drop-btn-open')) { // if the form is open, close it
-        form.classList.remove('drop-frm-open'); // remove the open classes
-        trigger.classList.remove('drop-btn-open');
-    } else { // otherwise, open it
-        form.classList.add('drop-frm-open'); // add the open classes
-        trigger.classList.add('drop-btn-open');
+    const func = hide ? 'add' : 'remove';
+    document.getElementById('frm-'+formName).classList[func]('hide');
+    document.getElementById('drop-'+formName).classList[func]('hide');
+};
+
+const closeForm = (formName, close=true) => {
+    /* closes (default) or opens a form */
+
+    const func = close ? 'remove' : 'add';
+    document.getElementById('frm-'+formName).classList[func]('drop-frm-open');
+    document.getElementById('drop-'+formName).classList[func]('drop-btn-open');
+};
+
+const resetForm = (formName) => {
+    /* resets a form to its default values, and closes it */
+
+    const form = document.getElementById('frm-'+formName);
+    const inputEvent = new Event('input');
+    const changeEvent = new Event('change');
+    form.reset();
+
+    /* trigger the form's custom field population, if it has any */
+    form.dispatchEvent(new Event('customReset'));
+
+    for (let element of form.elements) {
+        element.dispatchEvent(inputEvent);
+        element.dispatchEvent(changeEvent);
     }
+    closeForm(formName);
 };
 
-const transferClick = (e, elemId) => {
-    /* handles clicks on elements that should act like clicks on other elements */
+/* field actions */
+const populateField = (fieldId, newVal) => {
+    /* sets a fields value and triggers its input and change events */
 
-    const elem = document.getElementById(elemId); // get the element
-    elem.dispatchEvent(new MouseEvent('click')); // click on it
-};
-
-const fileChange = (e, prevId) => {
-    /* handles change events on file inputs */
-
-    const prev = document.getElementById(prevId); // get the preview area
-    const fileArray = e.currentTarget.files; // get the input's files
-    prev.innerText = fileArray.length === 0 ? '' : fileArray[0].name; // display the end of the path (i.e. the filename)
-};
-
-const checkboxChangeMsg = (e, msgboxId, msgT, msgF) => {
-    /* handles change events on a checkbox that is tied to a message box */
-
-    const msgbox = document.getElementById(msgboxId); // get the message box
-    msgbox.innerText = e.currentTarget.checked ? msgT : msgF; // change its contents
-};
-
-const checkboxChangeClps = (e, clpsId) => {
-    /* handles change events on a checkbox that is tied to a collapsible */
-
-    const clps = document.getElementById(clpsId); // get the collapsible
-    e.currentTarget.checked ? clps.classList.remove('hide') : clps.classList.add('hide'); // show or hide it
-};
-
-const refreshGenPass = (e, fieldId) => {
-    /* handles clicks of the 'refresh' button for auto-generated passcode fields */
-
-    const field = document.getElementById(fieldId); // get the passcode field
-    field.value = genPass(); // generate a new passcode
-    field.dispatchEvent(new Event('change')); // trigger the change event
-};
-
-const copyField = (e, fieldId) => {
-    /* copies the contents of an element to the clipboard */
-
-    const field = document.getElementById(fieldId); // get the field
-
-    if (field.tagName === 'INPUT') { // if the field is an input
-        field.select(); // highlight the text in it
-        field.setSelectionRange(0,999); // highlight the entire text (for mobile)
-        document.execCommand('copy'); // copy it
-    } else { // otherwise, the above won't work
-        let range = document.createRange();
-        range.selectNode(field); // create a new area to highlight
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range); // unhighlight everything else, and highlight this
-        document.execCommand('copy'); // copy it
-    }
-};
-
-const clearField = (e, fieldId) => {
-    /* handles clicks of the 'clear' button for fields */
     const field = document.getElementById(fieldId);
-    field.value = '';
+    field.value = newVal;
+    field.dispatchEvent(new Event('input'));
     field.dispatchEvent(new Event('change'));
 };
 
-const changeButtonStatus = (buttonId, color, msg, disable) => {
-    /* change the status of a submit button */
+const copyField = (fieldId) => {
+    /* copies the contents of a field to the clipboard */
 
-    const button = document.getElementById(buttonId); // get the button
-    if (!button.classList.contains(color)) { // if the button is a different colour...
-        button.classList.remove('btn-grn'); // remove all of the colour classes from it
-        button.classList.remove('btn-amb');
-        button.classList.remove('btn-red');
-        button.classList.add(color); // add the one we actually want
+    const field = document.getElementById(fieldId);
+    if (field.tagName === 'INPUT') {
+        if (field.value === '') field.value = field.placeholder; // copy placeholder if no value
+        field.select(); // only works on <input>s
+        field.setSelectionRange(0,999); // mobile compatibility
+        document.execCommand('copy');
+        if (field.value === field.placeholder) field.value = '';
+    } else {
+        let range = document.createRange();
+        range.selectNode(field);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(range);
+        document.execCommand('copy');
     }
-    button.value = msg; // change the message in the button
-    button.disabled = disable; // enable or disable the button
+};
+
+const changeButtonStatus = (buttonId, color, msg, disable) => {
+    /* changes the state of a submit button (which is actually an <input> but who's counting) */
+
+    const button = document.getElementById(buttonId);
+    if (!button.classList.contains(color)) {
+        button.classList.remove('btn-grn', 'btn-amb', 'btn-red');
+        button.classList.add(color);
+    }
+    button.value = msg;
+    button.disabled = disable;
+};
+
+/* error handling (and some other stuff) */
+const displayPopup = (popupId, cb) => {
+    /* displays the specified modal, executes cb with a return value when it closes */
+    
+    const modal = document.getElementById(popupId);
+    let buttonList = Array.from(
+        document.getElementsByClassName(modal.getAttribute('data-buttonclass'))
+    );
+    let handler = event => {
+        /* when a button is clicked, hide the modal, remove all button handlers, callback */
+        let trigger = event.currentTarget;
+        modal.classList.add('hide');
+        buttonList.forEach((i) => {i.removeEventListener('click', handler)});
+        cb(null, trigger.getAttribute('data-return'));
+    };
+    buttonList.forEach((i) => {i.addEventListener('click', handler)});
+    modal.classList.remove('hide');
 };
 
 const markInvalid = (formName, inputs, cb) => {
-    /* mark certain inputs of a form as invalid */
+    /* marks certain inputs of a form as invalid */
 
-    if (inputs.length > 1) { // if the issue is with multiple inputs
-        inputs.forEach((input) => {
-            let element = document.getElementById(`${formName}-${input}`); // get each one in turn
-            element.classList.add('invalid'); // mark it as invalid
-            let handler = (e) => { // create a handler for when it next changes
-                let index = inputs.indexOf(input);
-                if (index > -1) {
-                    inputs.splice(index, 1); // remove this input from the list of invalid ones
-                }
-                element.removeEventListener('change', handler); // remove this handler
-                element.classList.remove('invalid'); // and remove the 'invalid' mark
-                if (inputs.length === 0) { // if this was the last input
-                    cb(); // execute the callback function
-                }
+    /* error if any input isn't in the form */
+    const elements = document.getElementById('frm-'+formName).elements;
+    inputs.forEach((inputName) => {
+        if (!(inputName in elements)) {
+            throw new ReferenceError(`Input ${inputName} is not in the form`);
+        }
+    });
+
+    if (inputs.length > 1) {
+        inputs.forEach((inputName) => {
+            let element = document.getElementById(`${formName}-${inputName}`);
+            element.classList.add('invalid');
+            let handler = (e) => {
+                /* when each input is changed, remove its special styling and behaviour */
+                element.removeEventListener('input', handler);
+                element.classList.remove('invalid');
+
+                /* once all inputs have been changed, callback */
+                let index = inputs.indexOf(inputName);
+                if (index > -1) inputs.splice(index, 1);
+                if (inputs.length === 0) cb();
             };
-            element.addEventListener('change', handler); // attach the handler
+            element.addEventListener('input', handler);
         });
-    } else { // if there was only one problem, the handler is much simpler
-        let element = document.getElementById(`${formName}-${inputs[0]}`); // get the problem input
-        element.classList.add('invalid'); // mark it as invalid
-        let handler = (e) => { // create the handler
-            element.removeEventListener('change', handler); // remove this handler
-            element.classList.remove('invalid'); // remove the invalid mark
-            cb(); // execute the callback
+    } else {
+        let element = document.getElementById(`${formName}-${inputs[0]}`);
+        element.classList.add('invalid');
+        let handler = (e) => {
+            /* only one problem input, so no need to check how many are left */
+            element.removeEventListener('input', handler);
+            element.classList.remove('invalid');
+            cb();
         };
-        element.addEventListener('change', handler); // add this handler
+        element.addEventListener('input', handler);
     }
 };
 
-const displayImage = () => {
-    /* changes the image display to show the global currentImage */
+/* fetch actions */
+const makeRequest = (url, params, cb, formName, buttonText, passName) => {
+    fetch(url, params).catch(err => {
+        throw new ConnectionError('The server did not respond.');
+    }).then(resp => {
+        if (resp.status === 500) {
+            throw new ServerError('An unspecified error occurred.', 500, {});
+        } else {
+            return resp.json();
+        }
+    }).then (retdata => {
+        if (retdata['status'] !== 200) { // catch other errors
+            throw new ServerError('The server returned an error.', retdata['status'], retdata);
+        }
+        if (formName) changeButtonStatus(formName+'-submit','btn-grn',buttonText,false);
+        cb(retdata);
+    }).catch(err => {
+        let displayError;
+        let invalError;
+        if (formName) {
+            /* handlers for when the action has a form attached */
+            displayError = (modalId, buttonMsg) => {
+                /* by showing a popup */
+                changeButtonStatus(formName+'-submit','btn-red',buttonMsg,true);
+                displayPopup(modalId, (err, ret) => {
+                    if (ret === 'retry') {
+                        changeButtonStatus(formName+'-submit','btn-amb','Processing...',true);
+                        makeRequest(url, params, cb, formName, buttonText, passName);
+                    } else {
+                        changeButtonStatus(formName+'-submit','btn-grn',buttonText,false);
+                    }
+                });
+            };
+            invalError = (invalid, buttonMsg) => {
+                /* by making fields red */
+                changeButtonStatus(formName+'-submit', 'btn-red', buttonMsg, true);
+                markInvalid(formName, invalid, () => {
+                    changeButtonStatus(formName+'-submit','btn-grn',buttonText, false);
+                });
+            };
+        } else {
+            /* handlers without a form attached */
+            displayError = (modalId) => {
+                displayPopup(modalId, (err, ret) => {
+                    if (ret === 'retry') makeRequest(url, params, cb, formName, buttonText, passName);
+                });
+            };
+            invalError = () => {throw new Error('No form')};
+        }
 
-    dropUnlock.classList.remove('hide', 'drop-btn-open');
-    frmUnlock.classList.remove('hide', 'drop-frm-open');
-    frmUnlock.reset();
-    dropUpdate.classList.add('hide');
-    frmUpdate.classList.add('hide');
-    frmUpdate.reset();
-    buttonCollapsibleUpdate.dispatchEvent(new Event('change'));
-
-    const displayRow = document.getElementById('image-display-row');
-    const displayImg = document.getElementById('display-image');
-    let imageUrl = new URLSearchParams();
-
-    displayRow.classList.remove('hide'); // show the display row
-    displayImg.addEventListener('load', ()=> displayRow.scrollIntoView(true)); // once the image loads, scroll to the display row
-
-    document.getElementById('display-title').innerText = currentImage['title']; // set title
-
-    imageUrl.append('id',currentImage['id']);
-    if (currentImage['priv']) { // if the image is private, display the padlock
-        document.getElementById('display-priv').classList.remove('hide');
-        imageUrl.append('view-pass',currentImage['view-pass']); // and put the passcode in the url
-    } else { // otherwise hide the padlock
-        document.getElementById('display-priv').classList.add('hide');
-    }
-
-    displayImg.setAttribute('src', '/image/embed?'+imageUrl.toString()); // set the image's src
-
-    if (currentImage['author'] === '') { // if the image's author was set, display it
-        document.getElementById('display-author').classList.add('hide');
-    } else {
-        const authorDisplay = document.getElementById('display-author');
-        authorDisplay.classList.remove('hide');
-        authorDisplay.firstElementChild.innerText = currentImage['author'];
-    }
-
-    if (currentImage['copyright'] === '') { // same for the image's copyright
-        document.getElementById('display-copyright').classList.add('hide');
-    } else {
-        const authorDisplay = document.getElementById('display-copyright');
-        authorDisplay.classList.remove('hide');
-        authorDisplay.firstElementChild.innerText = currentImage['copyright'];
-    }
+        if (err.name === 'ConnectionError') {
+            displayError('server-down', 'Connection Error');
+        } else if (err.name === 'ServerError') {
+            /* if the server returned an error code, check for common user errors */
+            try {
+                switch (err.status) {
+                    case 400:
+                        /* input(s) weren't valid */
+                        invalError(err.details['invalid'], 'Validation Error');
+                        break;
+                    
+                    case 401:
+                    case 403:
+                        /* passcode wasn't valid */
+                        invalError([passName], 'Authentication Error');
+                        break;
+                    
+                    case 404:
+                        /* id wasn't found */
+                        invalError(['id'], 'Not Found');
+                        break;
+                    
+                    default:
+                        displayError('server-error', 'Server Error');
+                }
+            } catch {
+                displayError('server-error', 'Server Error');
+            }
+        } else {
+            /* anything that hasn't already been handled gets a generic error message */
+            displayError('server-error', 'Server Error');
+        }
+    });
 };
 
-const getImage = (imageID, viewPass, cb) => {
+/* image actions */
+const getImage = (imageID, viewPass, cb, formName, buttonText, passName) => {
     /* get an image from the server, execute callback once it's there */
 
-    let reqData = new URLSearchParams(); // build the request (validation happens beforehand)
+    let reqData = new URLSearchParams();
     reqData.append('id', imageID);
     viewPass === '' ? nop : reqData.append('view-pass', viewPass);
 
@@ -290,266 +278,282 @@ const getImage = (imageID, viewPass, cb) => {
         'view-pass': viewPass
     };
 
-    fetch('/image/get?' + reqData.toString(), {method: 'GET'}).catch(err => { // make the request
-        throw new ConnectionError('The server did not respond'); // catch connection errors
-    }).then(resp => {
-        if (resp.status === 500) {
-            throw new ServerError('An unexpected error occurred', 500, {}); // catch 500 errors
-        } else {
-            return resp.json();
-        }
-    }).then(resData => {
-        if (resData['status'] !== 200) { // catch any other error
-            throw new ServerError('The server returned an error.', resData['status'], resData);
-        }
+    makeRequest('/image/get?' + reqData.toString(), {method: 'GET'}, (resData) => {
         newImage['priv'] = resData['priv'];
         newImage['title'] = resData['title'];
         newImage['author'] = resData['author'];
         newImage['copyright'] = resData['copyright'];
         newImage['nsfw'] = resData['nsfw'];
-        cb(null, newImage); // execute callback without error if everything was fine
-    }).catch(err => {
-        cb(err, newImage); // if everything was not fine, execute callback with the error
-    });
+        cb(null, newImage);
+    }, formName, buttonText, passName);
 };
 
-/* attach event handlers */
+const displayImage = () => {
+    /* changes the image display to show the global currentImage */
+    /* also resets the unlock and update forms, and the comments section */
+    // TODO comments section
+
+    resetForm('unlock');
+    resetForm('update');
+    hideForm('unlock', 'edit-pass' in currentImage); // hide 'unlock' if the image is unlocked
+    hideForm('update', !('edit-pass' in currentImage)); // hide 'update' if the image is locked
+    closeForm('update', false);
+
+    const displayRow = document.getElementById('image-display-row');
+    const displayImg = document.getElementById('display-image');
+    let imageUrl = new URLSearchParams();
+
+    displayRow.classList.remove('hide');
+    /* don't scroll until the image is loaded */
+    displayImg.addEventListener('load', () => displayRow.scrollIntoView(true));
+
+    document.getElementById('display-title').innerText = currentImage['title'];
+
+    imageUrl.append('id',currentImage['id']);
+    if (currentImage['priv']) {
+        /* for a private image, display a padlock and use a view pass */
+        document.getElementById('display-priv').classList.remove('hide');
+        imageUrl.append('view-pass',currentImage['view-pass']);
+    } else {
+        document.getElementById('display-priv').classList.add('hide');
+    }
+
+    displayImg.setAttribute('src', '/image/embed?'+imageUrl.toString());
+
+    const authorDisplay = document.getElementById('display-author');
+    authorDisplay.classList[
+        currentImage['author'] === '' ? 'add' : 'remove'
+    ]('hide');
+    authorDisplay.firstElementChild.innerText = currentImage['author'];
+
+    const copyrightDisplay = document.getElementById('display-copyright');
+    copyrightDisplay.classList[
+        currentImage['copyright'] === '' ? 'add' : 'remove'
+    ]('hide');
+    copyrightDisplay.firstElementChild.innerText = currentImage['copyright'];
+};
+
+const unloadImage = () => {
+    /* removes the image display and the current image */
+
+    currentImage = {};
+    resetForm('unlock');
+    resetForm('update');
+    document.getElementById('image-display-row').classList.add('hide');
+    document.getElementById('display-image').setAttribute('src','');
+};
+
+/*
+    === event handlers ===
+*/
+
+/* clicks */
+const dropClick = (e, formName) => {
+    /* handles clicks on form header buttons to open or close the form */
+
+    closeForm(formName, e.currentTarget.classList.contains('drop-btn-open'));
+};
+
+const transferClick = (e, elemId) => {
+    /* handles clicks on elements that should act like clicks on other elements */
+
+    document.getElementById(elemId).dispatchEvent(new MouseEvent('click'));
+};
+
+/* file inputs */
+const fileChange = (e, prevId) => {
+    /* handles change events on file inputs to display the file's name */
+
+    const fileArray = e.currentTarget.files;
+    document.getElementById(prevId).innerText = fileArray.length === 0 ? '' : fileArray[0].name;
+};
+
+/* checkboxes */
+const checkboxChangeMsg = (e, msgboxId, msgT, msgF) => {
+    /* handles change events on a checkbox that is tied to a message box */
+
+    document.getElementById(msgboxId).innerText = e.currentTarget.checked ? msgT : msgF;
+};
+
+const checkboxChangeClps = (e, clpsId) => {
+    /* handles change events on a checkbox that is tied to a collapsible */
+
+    document.getElementById(clpsId).classList[
+        e.currentTarget.checked ? 'remove' : 'add'
+    ]('hide');
+};
+
+/*
+    === element references ===
+*/
 
 /* upload form */
-dropUpload.addEventListener('click', (e) => dropClick(e, 'frm-upload'));
-infoUpload.addEventListener('click', (e) => displayPopup('info-upload', nop));
-buttonUploadFile.addEventListener('click', (e) => transferClick(e, 'upload-file'));
-inputUploadFile.addEventListener('change', (e) => fileChange(e, 'upload-file-name'));
-toggleUploadPriv.addEventListener('click', (e) => transferClick(e, 'upload-priv'));
-inputUploadPriv.addEventListener('change', (e) => {
+const frmUpload = document.getElementById('frm-upload');
+
+/* update form */
+const frmUpdate = document.getElementById('frm-update');
+
+/*
+    === attach event handlers ===
+*/
+
+/* upload form */
+document.getElementById('drop-upload').addEventListener('click', (e) => dropClick(e, 'upload'));
+document.getElementById('upload-info').addEventListener('click', (e) => displayPopup('info-upload', nop));
+document.getElementById('upload-file-btn').addEventListener('click', (e) => transferClick(e, 'upload-file'));
+document.getElementById('upload-file').addEventListener('change', (e) => fileChange(e, 'upload-file-name'));
+document.getElementById('upload-priv-tog').addEventListener('click', (e) => transferClick(e, 'upload-priv'));
+document.getElementById('upload-priv').addEventListener('change', (e) => {
     checkboxChangeMsg(e, 'upload-priv-msg', 'check', 'close');
     checkboxChangeClps(e, 'upload-view-pass-container');
 });
-refreshUploadEditPass.addEventListener('click', (e) => refreshGenPass(e, 'upload-edit-pass'));
-inputUploadEditPass.addEventListener('click', (e) => transferClick(e, 'upload-edit-pass-copy'));
-copyUploadEditPass.addEventListener('click', (e) => copyField(e, 'upload-edit-pass'));
-refreshUploadViewPass.addEventListener('click', (e) => refreshGenPass(e, 'upload-view-pass'));
-inputUploadViewPass.addEventListener('click', (e) => transferClick(e, 'upload-view-pass-copy'));
-copyUploadViewPass.addEventListener('click', (e) => copyField(e, 'upload-view-pass'));
-buttonCollapsibleUpload.addEventListener('change', (e) => {
+document.getElementById('upload-edit-pass-refresh').addEventListener('click', (e) => populateField('upload-edit-pass', genPass()));
+document.getElementById('upload-edit-pass').addEventListener('click', (e) => transferClick(e, 'upload-edit-pass-copy'));
+document.getElementById('upload-edit-pass-copy').addEventListener('click', (e) => copyField('upload-edit-pass'));
+document.getElementById('upload-view-pass-refresh').addEventListener('click', (e) => populateField('upload-view-pass', genPass()));
+document.getElementById('upload-view-pass').addEventListener('click', (e) => transferClick(e, 'upload-view-pass-copy'));
+document.getElementById('upload-view-pass-copy').addEventListener('click', (e) => copyField('upload-view-pass'));
+document.getElementById('clps-btn-upload').addEventListener('change', (e) => {
     checkboxChangeMsg(e, 'clps-upload-msg', 'Show Fewer Options', 'Show More Options');
     checkboxChangeClps(e, 'clps-frm-upload');
 });
-toggleUploadNsfw.addEventListener('click', (e) => transferClick(e, 'upload-nsfw'));
-inputUploadNsfw.addEventListener('change', (e) => checkboxChangeMsg(e, 'upload-nsfw-msg', 'check', 'close'));
+document.getElementById('upload-nsfw-tog').addEventListener('click', (e) => transferClick(e, 'upload-nsfw'));
+document.getElementById('upload-nsfw').addEventListener('change', (e) => checkboxChangeMsg(e, 'upload-nsfw-msg', 'check', 'close'));
 
 /* successful upload modal */
-successDisplayID.addEventListener('click', (e) => transferClick(e, 'success-upload-id-copy'));
-successDisplayEdit.addEventListener('click', (e) => transferClick(e, 'success-upload-edit-copy'));
-successDisplayView.addEventListener('click', (e) => transferClick(e, 'success-upload-view-copy'));
-successCopyID.addEventListener('click', (e) => copyField(e, 'success-upload-id'));
-successCopyEdit.addEventListener('click', (e) => copyField(e, 'success-upload-edit-pass'));
-successCopyView.addEventListener('click', (e) => copyField(e, 'success-upload-view-pass'));
+document.getElementById('success-upload-id').addEventListener('click', (e) => transferClick(e, 'success-upload-id-copy'));
+document.getElementById('success-upload-edit-pass').addEventListener('click', (e) => transferClick(e, 'success-upload-edit-copy'));
+document.getElementById('success-upload-view-pass').addEventListener('click', (e) => transferClick(e, 'success-upload-view-copy'));
+document.getElementById('success-upload-id-copy').addEventListener('click', (e) => copyField('success-upload-id'));
+document.getElementById('success-upload-edit-copy').addEventListener('click', (e) => copyField('success-upload-edit-pass'));
+document.getElementById('success-upload-view-copy').addEventListener('click', (e) => copyField('success-upload-view-pass'));
 
 /* view form */
-dropView.addEventListener('click', (e) => dropClick(e, 'frm-view'));
-infoView.addEventListener('click', (e) => displayPopup('info-view', nop));
+document.getElementById('drop-view').addEventListener('click', (e) => dropClick(e, 'view'));
+document.getElementById('view-info').addEventListener('click', (e) => displayPopup('info-view', nop));
 
 /* unlock form */
-dropUnlock.addEventListener('click', (e) => dropClick(e, 'frm-unlock'));
-infoUnlock.addEventListener('click', (e) => displayPopup('info-unlock', nop));
+document.getElementById('drop-unlock').addEventListener('click', (e) => dropClick(e, 'unlock'));
+document.getElementById('unlock-info').addEventListener('click', (e) => displayPopup('info-unlock', nop));
 
 /* update form */
-dropUpdate.addEventListener('click', (e) => dropClick(e, 'frm-update'));
-infoUpdate.addEventListener('click', (e) => displayPopup('info-update', nop));
-buttonUpdateFile.addEventListener('click', (e) => transferClick(e, 'update-file'));
-inputUpdateFile.addEventListener('change', (e) => fileChange(e, 'update-file-name'));
-clearUpdateFile.addEventListener('click', (e) => clearField(e, 'update-file'));
-toggleUpdatePriv.addEventListener('click', (e) => transferClick(e, 'update-priv'));
-inputUpdatePriv.addEventListener('change', (e) => {
+document.getElementById('drop-update').addEventListener('click', (e) => dropClick(e, 'update'));
+document.getElementById('update-info').addEventListener('click', (e) => displayPopup('info-update', nop));
+document.getElementById('update-file-btn').addEventListener('click', (e) => transferClick(e, 'update-file'));
+document.getElementById('update-file').addEventListener('change', (e) => fileChange(e, 'update-file-name'));
+document.getElementById('update-file-clear').addEventListener('click', (e) => populateField('update-file', ''));
+document.getElementById('update-priv-tog').addEventListener('click', (e) => transferClick(e, 'update-priv'));
+document.getElementById('update-priv').addEventListener('change', (e) => {
     checkboxChangeMsg(e, 'update-priv-msg', 'check', 'close');
     checkboxChangeClps(e, 'update-view-pass-container');
 });
-refreshUpdateViewPass.addEventListener('click', (e) => refreshGenPass(e, 'update-view-pass'));
-inputUpdateViewPass.addEventListener('click', (e) => transferClick(e, 'update-view-pass-copy'));
-copyUpdateViewPass.addEventListener('click', (e) => copyField(e, 'update-view-pass'));
-clearUpdateViewPass.addEventListener('click', (e) => clearField(e, 'update-view-pass'));
-buttonCollapsibleUpdate.addEventListener('change', (e) => {
+document.getElementById('update-view-pass-refresh').addEventListener('click', (e) => populateField('update-view-pass', genPass()));
+document.getElementById('update-view-pass').addEventListener('click', (e) => transferClick(e, 'update-view-pass-copy'));
+document.getElementById('update-view-pass-copy').addEventListener('click', (e) => copyField('update-view-pass'));
+document.getElementById('update-view-pass-clear').addEventListener('click', (e) => populateField('update-view-pass', ''));
+document.getElementById('clps-btn-update').addEventListener('change', (e) => {
     checkboxChangeMsg(e, 'clps-update-msg', 'Show Fewer Options', 'Show More Options');
     checkboxChangeClps(e, 'clps-frm-update');
 });
-toggleUpdateNsfw.addEventListener('click', (e) => transferClick(e, 'update-nsfw'));
-inputUpdateNsfw.addEventListener('change', (e) => checkboxChangeMsg(e, 'update-nsfw-msg', 'check', 'close'));
+document.getElementById('update-nsfw-tog').addEventListener('click', (e) => transferClick(e, 'update-nsfw'));
+document.getElementById('update-nsfw').addEventListener('change', (e) => checkboxChangeMsg(e, 'update-nsfw-msg', 'check', 'close'));
 
-/* more complicated handlers */
+/*
+    === unique handlers ===
+*/
+
+/* customReset event */
+frmUpload.addEventListener('customReset', (e) => {
+    /* populate password fields */
+
+    populateField('upload-edit-pass', genPass());
+    populateField('upload-view-pass', genPass());
+});
+
+frmUpdate.addEventListener('customReset', (e) => {
+    /* populate fields from currentImage */
+
+    const elements = e.currentTarget.elements;
+    elements['title'].placeholder = currentImage['title'];
+    elements['priv'].checked = currentImage['priv'];
+    elements['view-pass'].placeholder = currentImage['view-pass'];
+    if (!currentImage['priv']) elements['view-pass'].value = genPass();
+    elements['author'].value = currentImage['author'];
+    elements['copyright'].value = currentImage['copyright'];
+    elements['nsfw'].checked = currentImage['nsfw'];
+});
+
+/* submit event */
 frmUpload.addEventListener('submit', (e) => {
-    e.preventDefault(); // stop regular submission
+    e.preventDefault();
 
-    changeButtonStatus('upload-submit', 'btn-amb', 'Processing...', true); // change the colour of the submit button
+    changeButtonStatus('upload-submit', 'btn-amb', 'Processing...', true);
 
-    const elements = frmUpload.elements; // get the elements in the form
-    let data = new FormData(); // parse them into a FormData with some checks
-    let invalid = []; // list of invalid entries, by name
+    const elements = e.currentTarget.elements;
+    let data = new FormData();
+    let invalid = [];
 
-    /* some validation and value parsing */
-    /* proper validation will happen server-side */
-    /* these are basically the things the user can do wrong without changing any HTML */
+    /*
+        value parsing with some validation, proper validation also happens server-side
+        these are basically the things the user can do wrong without changing any HTML
+    */
 
-    if (elements['title'].value === '') {
-        invalid.push('title');
-    } else {
-        data.append('title', elements['title'].value);
-    }
+    /* if either is empty, or 'file' is wrong type, mark invalid, otherwise add to data */
+    elements['title'].value === '' ?
+        invalid.push('title') : data.append('title', elements['title'].value);
+    elements['file'].files.length !== 1 || !elements['file'].files[0].type.startsWith('image/') ?
+        invalid.push('file') : data.append('file', elements['file'].files[0]);
 
-    if (elements['file'].files.length !== 1) {
-        invalid.push('file');
-    } else if (!elements['file'].files[0].type.startsWith('image/')) {
-        invalid.push('file');
-    } else {
-        data.append('file', elements['file'].files[0]);
-    }
-
-    // fill in the values for everything else
     data.append('view-pass', elements['priv'].checked ? elements['view-pass'].value : '');
     data.append('edit-pass', elements['edit-pass'].value);
     data.append('author', elements['author'].value);
     data.append('copyright', elements['copyright'].value);
     data.append('nsfw', elements['nsfw'].checked);
 
-    // if anything was invalid, abort and tell the user
+    /* if anything was invalid, handle it */
     if (invalid.length !== 0) {
         changeButtonStatus('upload-submit', 'btn-red', 'Validation Error', true);
         markInvalid('upload', invalid, () => {
             changeButtonStatus('upload-submit','btn-grn','Upload', false);
         });
-        return;
+        return; // end execution here, rather than trying the fetch request
     }
 
-    fetch('/image/upload', { // send the form data
+    makeRequest('/image/upload', { // make the request
         method: 'POST',
         body: data
-    }).catch(err => { // if it's already broken, throw a ConnectionError
-        throw new ConnectionError('The server did not respond.');
-    }).then(resp => {
-        if (resp.status === 500) { // if there's a 500 error, we don't know anything about it so throw it directly
-            throw new ServerError('An unspecified error occurred.', 500, {});
-        } else { // otherwise, unpack the JSON before anything else
-            return resp.json();
-        }
-    }).then (retdata => {
-        if (retdata['status'] !== 200) { // if the status code isn't 200, throw an error about it
-            throw new ServerError('The server returned an error.', retdata['status'], retdata);
-        }
-        changeButtonStatus('upload-submit','btn-grn','Upload',false); // make the button green again
+    }, (retdata) => {
+        /* prepare the success-upload popup */
+        document.getElementById('success-upload-id').innerText = retdata['id'];
+        document.getElementById('success-upload-edit-pass').innerText = data.get('edit-pass');
+        document.getElementById('success-upload-view-pass').innerText = data.get('view-pass');
+        document.getElementById('success-upload-view-pass-container').classList[
+            data.get('view-pass') === '' ? 'add' : 'remove'
+        ]('hide');
 
-        successDisplayID.innerText = retdata['id']; // populate the popup
-        successDisplayEdit.innerText = data.get('edit-pass');
-        if (data.get('view-pass') === '') { // if the image is public, don't display a view pass
-            document.getElementById('success-upload-view-pass-container').classList.add('hide');
-            successDisplayView.innerText = '';
-        } else {
-            document.getElementById('success-upload-view-pass-container').classList.remove('hide');
-            successDisplayView.innerText = data.get('view-pass');
-        }
-
-        displayPopup('success-upload', (err, ret) => { // display the popup
+        displayPopup('success-upload', (err, ret) => {
             if (err) throw err;
-            if (ret === 'display') { // if the user clicked 'show image'
-                const callback = (err, imageData) => { // create a callback function
-                    if (err) { // if there was an error
-                        if (err.name === 'ConnectionError') { // connection errors, tell the user to fix their internet
-                            displayPopup('server-down', (err, ret) => {
-                                if (ret === 'retry') {
-                                    getImage(imageData['id'], imageData['view-pass'], callback);
-                                }
-                            });
-                            return;
-                        } else {
-                            // any kind of 4XX error here is actually a symptom of a 5XX error
-                            // so handle anything else like that
-                            displayPopup('server-error', (err, ret) => {
-                                if (ret === 'retry') {
-                                    getImage(imageData['id'], imageData['view-pass'], callback);
-                                }
-                            });
-                        }
-                        return;
-                    } else { // if there wasn't an error
-                        currentImage = imageData; // make the retrieved image the new current one
-                        displayImage(); // display the image
-                        // if it's NSFW we don't need to tell the user because they already know
-                    }
-                };
-                getImage(retdata['id'], data.get('view-pass'), callback);
+            if (ret === 'display') { // corresponds to the 'show image' button
+                getImage(retdata['id'], data.get('view-pass'), (err, imageData) => {
+                    if (err) throw err;
+                    currentImage = imageData;
+                    displayImage();
+                });
             }
         });
 
-        frmUpload.reset(); // reset the form
-        inputUploadFile.dispatchEvent(new Event('change')); // dispatch change events
-        refreshUploadEditPass.dispatchEvent(new MouseEvent('click')); // and refresh passcodes
-        inputUploadPriv.dispatchEvent(new Event('change')); // as appropriate
-        refreshUploadViewPass.dispatchEvent(new MouseEvent('click'));
-        buttonCollapsibleUpload.dispatchEvent(new Event('change'));
-        inputUploadNsfw.dispatchEvent(new Event('change'));
-
-    }).catch(err => { // if any of the above made any errors, handle them here
-        if (err.name === 'ConnectionError') { // connection errors, tell the user to fix their internet
-            changeButtonStatus('upload-submit','btn-red','Connection Error',true);
-            displayPopup('server-down', (err, ret) => {
-                changeButtonStatus('upload-submit','btn-grn','Upload',false);
-                if (ret === 'retry') {
-                    // officially this should use SubmitEvent, but that isn't fully supported
-                    // Event isn't fully supported either but that's just IE so it can do one
-                    frmUpload.dispatchEvent(new Event('submit'));
-                }
-            });
-            return; // close the thread once the error is handled
-
-        } else if (err.name === 'ServerError') {
-            switch (err.status) {
-                case 400: // 400 means validation fail, so tell the user which fields they broke
-                    // of course, if they get this error, it means they've been poking around with dev tools but w/e
-                    changeButtonStatus('upload-submit', 'btn-red', 'Validation Error', true);
-                    markInvalid('upload', err.details['invalid'], () => {
-                        changeButtonStatus('upload-submit','btn-grn','Upload', false);
-                    });
-                    return;
-            }
-        }
-
-        // generic response for anything else
-        changeButtonStatus('upload-submit','btn-red','Server Error',true);
-        displayPopup('server-error', (err, ret) => {
-            changeButtonStatus('upload-submit','btn-grn','Upload',false);
-            if (ret === 'retry') {
-                frmUpload.dispatchEvent(new Event('submit'));
-            }
-        });
-        return;
-    });
+        resetForm('upload');
+    }, 'upload', 'Upload');
 });
 
-successDownload.addEventListener('click', (e) => {
-    /* create and save a text file containing the ID and passcode(s) */
-
-    let text = `ID: ${successDisplayID.innerText}\n`; // create the string
-    text += `Edit Passcode: ${successDisplayEdit.innerText}\n`;
-    if (successDisplayView.innerText !== '') { // only add the view pass if one exists
-        text += `View Passcode: ${successDisplayView.innerText}\n`;
-    }
-    let dummyLink = document.createElement('a'); // create a dummy download link
-    dummyLink.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text)); // put the data in it
-    dummyLink.setAttribute('download', 'Image Passcodes.txt'); // make it a download link and set the file name
-    dummyLink.classList.add('hide'); // make sure the user doesn't see it
-
-    document.body.appendChild(dummyLink); // put the link in the DOM
-    dummyLink.click(); // click on it
-    document.body.removeChild(dummyLink); // clear it away
-});
-
-frmView.addEventListener('submit', (e) => {
+document.getElementById('frm-view').addEventListener('submit', (e) => {
     e.preventDefault();
 
-    changeButtonStatus('view-submit', 'btn-amb', 'Processing...', true); // disable submit until done
+    changeButtonStatus('view-submit', 'btn-amb', 'Processing...', true);
 
-    const elements = frmView.elements; // get a list of the elements
-
-    if (elements['id'].value === '') { // if the ID is empty, tell the user to fill it in
+    const elements = e.currentTarget.elements;
+    if (elements['id'].value === '') {
+        /* validation error iff there isn't an id */
         changeButtonStatus('view-submit', 'btn-red', 'Validation Error', true);
         markInvalid('view', ['id'], () => {
             changeButtonStatus('view-submit','btn-grn','View', false);
@@ -558,76 +562,30 @@ frmView.addEventListener('submit', (e) => {
     }
 
     getImage(elements['id'].value, elements['view-pass'].value, (err, imageData) => { // get the image data
-        if (err) { // if there was an error
-            if (err.name === 'ConnectionError') { // connection errors, tell the user to fix their internet
-                changeButtonStatus('view-submit','btn-red','Connection Error',true);
-                displayPopup('server-down', (err, ret) => {
-                    changeButtonStatus('view-submit','btn-grn','View',false);
-                    if (ret === 'retry') {
-                        // officially this should use SubmitEvent, but that isn't fully supported
-                        // Event isn't fully supported either but that's just IE so it can do one
-                        frmView.dispatchEvent(new Event('submit'));
-                    }
-                });
-                return;
-            } else if (err.name === 'ServerError') {
-                switch (err.status) {
-                    case 400: // handle validation fail
-                        changeButtonStatus('view-submit', 'btn-red', 'Validation Error', true);
-                        markInvalid('view', err.details['invalid'], () => {
-                            changeButtonStatus('view-submit','btn-grn','View', false);
-                        });
-                        return;
-                    
-                    case 401: // handle authentication fail
-                    case 403:
-                        changeButtonStatus('view-submit', 'btn-red', 'Authentication Error', true);
-                        markInvalid('view', ['view-pass'], () => {
-                            changeButtonStatus('view-submit','btn-grn','View', false);
-                        });
-                        return;
-                    
-                    case 404: // handle not found
-                        changeButtonStatus('view-submit', 'btn-red', 'Not Found', true);
-                        markInvalid('view', ['id'], () => {
-                            changeButtonStatus('view-submit','btn-grn','View', false);
-                        });
-                        return;
-                }
-            }
-            // anything that hasn't been handled gets generic response
-            changeButtonStatus('view-submit','btn-red','Server Error',true);
-            displayPopup('server-error', (err, ret) => {
-                changeButtonStatus('view-submit','btn-grn','View',false);
-                if (ret === 'retry') {
-                    frmView.dispatchEvent(new Event('submit'));
+        if (imageData['nsfw']) {
+            /* confirm that the user wants to see an NSFW image */
+            displayPopup('nsfw-view', (err, ret) => {
+                if (ret === 'confirm') {
+                    currentImage = imageData;
+                    displayImage();
                 }
             });
-            return;
-        } else { // if there wasn't an error
-            changeButtonStatus('view-submit','btn-grn','View',false); // turn the button back to green
-
-            if (imageData['nsfw']) { // if the image was NSFW, confirm that the user wants to see it
-                displayPopup('nsfw-view', (err, ret) => {
-                    if (ret === 'confirm') { // if they do, show them it
-                        currentImage = imageData;
-                        displayImage();
-                    }
-                });
-            } else { // if it wasn't NSFW, display it without further warning
-                currentImage = imageData;
-                displayImage();
-            }
-    
-            frmView.reset();
+        } else {
+            /* it the image is SFW, no warning */
+            currentImage = imageData;
+            displayImage();
         }
-    });
+        resetForm('view');
+    }, 'view', 'View', 'view-pass');
 });
 
-frmUnlock.addEventListener('submit', (e) => {
+document.getElementById('frm-unlock').addEventListener('submit', (e) => {
     e.preventDefault();
 
-    if (frmUnlock.elements['edit-pass'].value === '') {
+    changeButtonStatus('unlock-submit', 'btn-amd', 'Processing...', true);
+
+    if (e.currentTarget.elements['edit-pass'].value === '') {
+        /* validation error if the only input is empty */
         changeButtonStatus('unlock-submit', 'btn-red', 'Validation Error', true);
         markInvalid('unlock', ['edit-pass'], () => {
             changeButtonStatus('unlock-submit','btn-grn','Unlock', false);
@@ -637,82 +595,132 @@ frmUnlock.addEventListener('submit', (e) => {
     
     const data = new FormData();
     data.append('id', currentImage['id']);
-    data.append('edit-pass', frmUnlock.elements['edit-pass'].value);
+    data.append('edit-pass', e.currentTarget.elements['edit-pass'].value);
 
-    fetch('/image/verify', { // send the form data
+    makeRequest('/image/verify', {
         method: 'POST',
         body: data
-    }).catch(err => { // if it's already broken, throw a ConnectionError
-        throw new ConnectionError('The server did not respond.');
-    }).then(resp => {
-        if (resp.status === 500) { // if there's a 500 error, we don't know anything about it so throw it directly
-            throw new ServerError('An unspecified error occurred.', 500, {});
-        } else { // otherwise, unpack the JSON before anything else
-            return resp.json();
-        }
-    }).then(retdata => {
-        if (retdata['status'] !== 200) { // if the status code isn't 200, throw an error about it
-            throw new ServerError('The server returned an error.', retdata['status'], retdata);
-        }
-        changeButtonStatus('unlock-submit','btn-grn','Unlock',false); // make the button green again
+    }, () => {
 
-        dropUnlock.classList.add('hide'); // hide this form
-        frmUnlock.classList.add('hide');
-        dropUpdate.classList.remove('hide'); // and display the other one
-        frmUpdate.classList.remove('hide');
-        dropUpdate.classList.add('drop-btn-open');
-        frmUpdate.classList.add('drop-frm-open');
-        
-        document.getElementById('update-title').placeholder = currentImage['title']; // set title
-        document.getElementById('update-file-name').innerText = '';
-        inputUpdatePriv.checked = currentImage['priv']; // set privacy
-        inputUpdatePriv.dispatchEvent(new Event('change'));
-        inputUpdateViewPass.placeholder = currentImage['view-pass']; // set view-pass
-        currentImage['priv'] ? nop() : inputUpdateViewPass.value = genPass();
-        document.getElementById('update-author').placeholder = currentImage['author']; // set author
-        document.getElementById('update-copyright').placeholder = currentImage['copyright']; // set copyright
-        inputUpdateNsfw.checked = currentImage['nsfw']; // set nsfw
-        inputUpdateNsfw.dispatchEvent(new Event('change'));
-    }).catch(err => {
-        if (err.name === 'ConnectionError') { // connection errors, tell the user to fix their internet
-            changeButtonStatus('unlock-submit', 'btn-red', 'Connection Error', true);
-            displayPopup('server-down', (err, ret) => {
-                changeButtonStatus('unlock-submit','btn-grn','Unlock',false);
-                if (ret === 'retry') {
-                    frmUnlock.dispatchEvent(new Event('submit'));
-                }
-            });
-            return;
-        } else if (err.name === 'ServerError') {
-            switch (err.status) {
-                case 400: // validation or authentication fail both mean the edit pass was wrong                
-                case 403:
-                    changeButtonStatus('unlock-submit', 'btn-red', 'Authentication Error', true);
-                    markInvalid('unlock', ['edit-pass'], () => {
-                        changeButtonStatus('unlock-submit','btn-grn','Unlock', false);
-                    });
-                    return;
-            }
-        }
-        changeButtonStatus('unlock-submit', 'btn-red', 'Server Error', true);
-        displayPopup('server-error', (err, ret) => {
-            changeButtonStatus('unlock-submit','btn-grn','Unlock',false);
-            if (ret === 'retry') {
-                frmUnlock.dispatchEvent(new Event('submit'));
-            }
-        });
-        return;
-    });
+        /* get rid of the unlock form and display the update form */
+        currentImage['edit-pass'] = data.get('edit-pass');
+        hideForm('unlock');
+        resetForm('unlock');
+        hideForm('update', false);
+        resetForm('update');
+        closeForm('update', false);
+    }, 'unlock', 'Unlock', 'edit-pass');
 });
 
 frmUpdate.addEventListener('submit', (e) => {
     e.preventDefault();
 
-    // TODO
+    changeButtonStatus('update-submit', 'btn-amb', 'Processing...', true);
+
+    const elements = e.currentTarget.elements;
+    let data = new FormData();
+    data.append('id', currentImage['id']);
+    data.append('edit-pass', currentImage['edit-pass']);
+
+    if (elements['title'].value !== '') data.append('title', elements['title'].value);
+
+    if (elements['file'].files.length === 1) {
+        if (!elements['file'].files[0].type.startsWith('image/')) {
+            /* validation error if the uploaded file, if it exists, is the wrong type */
+            changeButtonStatus('update-submit', 'btn-red', 'Validation Error', true);
+            markInvalid('update', ['file'], () => {
+                changeButtonStatus('update-submit','btn-grn','Update', false);
+            });
+            return; // halt here instead of making fetch request
+        }
+        data.append('file', elements['file'].files[0]);
+    }
+
+    if (elements['priv'].checked) {
+        if (elements['view-pass'].value !== '') data.append('view-pass', elements['view-pass'].value);
+    } else {
+        if (currentImage['priv']) data.append('view-pass', '');
+    }
+
+    if (elements['author'].value !== currentImage['author']) data.append('author', elements['author'].value);
+    if (elements['copyright'].value !== currentImage['copyright'])
+        data.append('copyright', elements['copyright'].value);
+    if (elements['nsfw'].checked !== currentImage['nsfw']) data.append('nsfw', elements['nsfw'].checked);
+
+    if (Array.from(data.entries()).length === 2) {
+        /* if there is nothing to update, mark ALL inputs as invalid until ONE of them changes */
+        changeButtonStatus('update-submit', 'btn-red', 'No Changes', true);
+        for (let input of elements) {
+            if (!input.name) continue; // because its a button or dropdown header or something
+            input.classList.add('invalid');
+            let handler = (e) => {
+                for (let inputInner of elements) {
+                    inputInner.classList.remove('invalid');
+                    inputInner.removeEventListener('input', handler);
+                }
+                changeButtonStatus('update-submit', 'btn-grn', 'Update', false);
+            };
+            input.addEventListener('input', handler);
+        }
+        return;
+    }
+
+    makeRequest('/image/update', { // send the form data
+        method: 'POST',
+        body: data
+    }, () => {
+        getImage(data.get('id'), data.get('view-pass') || currentImage['view-pass'], (err, imageData) => {
+            if (err) throw err;
+            let pass = currentImage['edit-pass'];
+            currentImage = imageData;
+            currentImage['edit-pass'] = pass;
+            displayImage();
+        });
+    }, 'update', 'Update');
 });
 
-/* load event */
-window.addEventListener('load', (e) => {
-    inputUploadEditPass.value = genPass();
-    inputUploadViewPass.value = genPass();
+/* misc */
+document.getElementById('success-upload-download').addEventListener('click', (e) => {
+    /* create and save a text file containing the ID and passcode(s) */
+
+    let text = `ID: ${document.getElementById('success-upload-id').innerText}\n`;
+    text += `Edit Passcode: ${document.getElementById('success-upload-edit-pass').innerText}\n`;
+
+    const viewPass = document.getElementById('success-upload-view-pass').innerText;
+    if (viewPass !== '') text += `View Passcode: ${viewPass}\n`;
+
+    let dummyLink = document.createElement('a');
+    dummyLink.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    dummyLink.setAttribute('download', 'Image Passcodes.txt');
+    dummyLink.classList.add('hide');
+
+    document.body.appendChild(dummyLink);
+    dummyLink.click();
+    document.body.removeChild(dummyLink);
 });
+
+document.getElementById('update-delete').addEventListener('click', (e) => {
+    displayPopup('delete-confirm', (err, ret) => {
+        if (err) throw err;
+        if (ret === 'confirm') {
+            let data = new FormData();
+            data.append('id', currentImage['id']);
+            data.append('edit-pass', currentImage['edit-pass']);
+
+            makeRequest('/image/delete', {
+                method: 'POST',
+                body: data
+            }, () => {
+                unloadImage();
+                displayPopup('delete-success', nop);
+                // TODO test this
+            });
+        }
+    });
+});
+
+/*
+    === on page load ===
+*/
+populateField('upload-edit-pass', genPass());
+populateField('upload-view-pass', genPass());

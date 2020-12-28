@@ -1,4 +1,6 @@
-// package imports
+/*
+    package imports
+*/
 const http = require('http');
 const express = require('express');
 const multer = require('multer');
@@ -6,10 +8,17 @@ const fs = require('fs');
 const {v4: uuidv4} = require('uuid');
 const mime = require('mime-types');
 
-// server settings
+/*
+    globals
+*/
 const dbImagePath = 'data/image-db.json';
 
-// error types
+/* no operation */
+const nop = () => {};
+
+/*
+    error handling
+*/
 class UserError extends Error {
     constructor(message, details) {
         super(message);
@@ -21,367 +30,400 @@ class UserError extends Error {
 
 const errorResponse = (err, req, res, restype) => {
     /* Handles error responses to every call */
+
+    let status = 500;
+    let details = {'status': 500};
     if (err.name === 'UserError') {
-        // if it's an error that this script generated
-        res.status(err.status);
-        res.contentType(mime.contentType(restype)); // send the appropriate headers
-        switch (restype) { // send a body depending on the mimetype the user will be expecting
-            case '.png': // images
-                fs.createReadStream(`error/image/${err.status}.png`).pipe(res);
-                break;
+        status = err.status;
+        details = err.details;
+    }
 
-            case '.json': // json data
-                res.json(err.details);
-                break;
+    if (req.file) fs.unlink(req.file.path, nop);
+    res.status(status);
+    res.contentType(mime.contentType(restype));
+    switch (restype) {
+        /* body depending on expected mime type */
+        case '.png':
+            fs.createReadStream(`error/image/${status}.png`).pipe(res);
+            break;
 
-            default: // default to plaintext
-                // this should never actually happen but it helps to be prepared
-                res.send('There was a problem with your request.');
-                break;
-        }
-    } else {
-        res.status(500); // if it's some other error, just give a generic 500
-        res.contentType(mime.contentType(restype));
-        switch (restype) {
-            case '.png':
-                fs.createReadStream('error/image/500.png').pipe(res);
-                break;
-            
-            case '.json':
-                res.json({'status': 500});
-                break;
-        
-            default:
-                res.send('The server encountered an error while processing your request.\nPlease try again later.\n');
-                break;
-        }
+        case '.json':
+            res.json(details);
+            break;
+
+        default:
+            /* default to plaintext */
+            res.send('The server encountered an error while processing your request.\nPlease try again later.\n');
+            break;
     }
 };
 
+/*
+    upload handling
+*/
 const uploadStorage = multer.diskStorage({
     /* decides on a destination and a file name for uploaded images */
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        /* images are provisionally uploaded to temp, and moved or deleted depending on validation */
+        cb(null, 'uploads/temp/');
     },
     filename: (req, file, cb) => {
-        // generate a universally unique identifier for the image
         let uid = uuidv4();
-        let ext = mime.extension(file.mimetype); // get the appropriate file extension
+        let ext = mime.extension(file.mimetype);
         cb(null, `${uid}.${ext}`);
     }
 });
 
-const uploadFilter = (req, file, cb) => {
-    /* decides whether or not to process an uploaded file */
-    if (file.mimetype.startsWith('image/')) {
-        cb(null, true); // if it's an image, process it
+const upload = multer({
+    storage: uploadStorage
+});
+
+/*
+    validation
+*/
+const validate = (body, rules, file, defaults) => {
+    /* validate a request body according to some rules, returning either a validated object or an error */
+
+    let newEntry = {};
+    let invalid = [];
+    if ('file' in rules) {
+        if (file) {
+            if (rules['file'].includes(file.mimetype.split('/')[0])) {
+                newEntry['uri'] = file.filename;
+            } else {
+                invalid.push('file');
+            }
+        } else if (rules['file'].includes('optional')) {
+            newEntry['uri'] = defaults['file'];
+        } else {
+            invalid.push('file');
+        }
+    }
+    if (!body) {
+        /* check for an empty body */
+        for (let [key, value] of Object.entries(rules)) {
+            if (!('optional' in value) && key !== 'file') {
+                invalid.push(key);
+            }
+        }
+        return new UserError(
+            'No input was sent',
+            {
+                'status': 400,
+                'invalid': invalid
+            }
+        );
+    }
+    for (let [key, value] of Object.entries(rules)) {
+        /* check the body for each rule */
+        if (key === 'file') continue;
+        if (key in body) {
+            if (body[key] !== '') {
+                if (typeof body[key] !== 'string') {
+                    invalid.push(key);
+
+                } else if (value.includes('string')) {
+                    newEntry[key] = body[key];
+
+                } else if (value.includes('boolean')) {
+                    if (body[key] === 'true') {
+                        newEntry[key] = true;
+                    } else if (body[key] === 'false') {
+                        newEntry[key] = false;
+                    } else {
+                        invalid.push(key);
+                    }
+
+                } else {
+                    throw new Error(`data type ${value} not implemented for ${key}`);
+                }
+
+            } else if (value.includes('optional')) {
+                newEntry[key] = (value.includes('string')) ? body[key] : false;
+            } else {
+                invalid.push(key);
+            }
+
+        } else if (value.includes('optional')) {
+            newEntry[key] = (value.includes('string')) ? defaults['string'] : defaults['boolean'];
+        } else {
+            invalid.push(key);
+        }
+    }
+    if (invalid.length > 0) {
+        return new UserError(
+            'At least one input was invalid',
+            {
+                'status': 400,
+                'invalid': invalid
+            }
+        );
     } else {
-        cb(null, false); // otherwise, don't. The post callback will send the error to the user
+        return newEntry;
     }
 };
 
-const upload = multer({
-    storage: uploadStorage,
-    fileFilter: uploadFilter
-});
+/*
+    database actions (heh, "database", lol)
+*/
+const getItemByID = (dbPath, uuid) => {
+    /* get the item at uuid from the json file at dbPath */
 
+    return new Promise((resolve, reject) => {
+        fs.readFile(dbPath, (err, data) => {
+            if (err) return reject(err);
+            let jsonData = JSON.parse(data);
+            if (uuid in jsonData) return resolve(jsonData[uuid]);
+            return reject(new UserError(
+                'UUID not found',
+                {'status': 404}
+            ));
+        });
+    });
+};
+
+const createRecord = (dbPath, uuid, record) => {
+    /* insert record into the json file at dbPath at the key uuid */
+    return new Promise((resolve, reject) => {
+        fs.readFile(dbPath, (err, data) => {
+            if (err) return reject(err);
+            let jsonData = JSON.parse(data);
+            if (uuid in jsonData) return reject(new UserError('UUID is already present', {'status': 500}));
+            jsonData[uuid] = record;
+            fs.writeFile(dbPath, JSON.stringify(jsonData), (err) => {
+                if (err) return reject(err);
+                return resolve();
+            });
+        });
+    });
+};
+
+const updateRecord = (dbPath, uuid, changes) => {
+    /* change the record at uuid to match the new values in changes */
+
+    return new Promise((resolve, reject) => {
+        fs.readFile(dbPath, (err, data) => {
+            if (err) return reject(err);
+            let jsonData = JSON.parse(data);
+            if (!(uuid in jsonData)) return reject(new UserError('UUID not found', {'status': 500}));
+            let updatedRecord = jsonData[uuid];
+            for (let [key, value] of Object.entries(changes)) {
+                if (key in updatedRecord) {
+                    updatedRecord[key] = value;
+                } else {
+                    return reject(new Error(`No ${key} item in record`));
+                }
+            }
+            jsonData[uuid] = updatedRecord;
+            fs.writeFile(dbPath, JSON.stringify(jsonData), (err) => {
+                if (err) return reject(err);
+                return resolve();
+            });
+        });
+    });
+};
+
+/*
+    server init
+*/
 const app = express(http.createServer());
-
 app.use(express.static('static/'));
-app.use(express.urlencoded({extended: true}));
 
+/*
+    image actions
+*/
 app.post('/image/upload', upload.single('file'), (req, res) => {
     /* upload an image to the server */
 
-    let newEntry = {};
-    let uuid = '';
-    let invalid = [];
+    let newEntry, uuid;
     
-    /* validate request */
-    if (!req.body) {
-        return errorResponse(
-            new UserError(
-                'No input was sent',
-                {
-                    'status': 400, // I know this is a repeat of the status code
-                    'invalid': [
-                        'title','file','view-pass','edit-pass','nsfw','author','copyright'
-                    ]
-                }
-            ), req, res, '.json'
-        );
-    }
+    /* validate */
+    let valResult = validate(req.body, {
+        'title': ['string'],
+        'edit-pass': ['string'],
+        'view-pass': ['string', 'optional'],
+        'nsfw': ['boolean', 'optional'],
+        'author': ['string', 'optional'],
+        'copyright': ['string', 'optional'],
+        'file': ['image']
+    }, req.file, {
+        'string': '',
+        'boolean': false,
+    });
 
-    if (!req.file) { // request must include a file
-        invalid.push('file');
-    } else {
-        uuid = req.file.filename.split('.')[0];
-        newEntry['uri'] = req.file.filename;
-    }
+    if (valResult instanceof UserError) return errorResponse(valResult, req, res, '.json');
 
-    if (!req.body['title'] || typeof req.body['title'] !== 'string') { // request must include a title
-        invalid.push('title');
-    } else {
-        newEntry['title'] = req.body['title'];
-    }
-
-    if (req.body['view-pass']) {
-        if (typeof req.body['view-pass'] === 'string') { // if the view-pass is set, it must be a string
-            newEntry['view-pass'] = req.body['view-pass'];
-        } else {
-            invalid.push('view-pass');
-        }
-    } else {
-        newEntry['view-pass'] = ''; // if no view-pass is set, use default value
-    }
-
-    if (!req.body['edit-pass'] || typeof req.body['edit-pass'] !== 'string') { // request must include an edit passcode
-        invalid.push('edit-pass');
-    } else {
-        newEntry['edit-pass'] = req.body['edit-pass'];
-    }
-
-    // the inability of a formdata to transmit booleans vexes me
-    if (req.body['nsfw']) {
-        if (typeof req.body['nsfw'] === 'boolean') { // if nsfw is set, it must be either a boolean (easy)
-            newEntry['nsfw'] = req.body['nsfw'];
-        } else if (typeof req.body['nsfw'] === 'string') { // or a string 'true' or 'false' (not easy)
-            if (req.body['nsfw'] === 'true') { // if it's 'true', it's true
-                newEntry['nsfw'] = true;
-            } else if (req.body['nsfw'] === 'false') { // if it's 'false', it's false
-                newEntry['nsfw'] = false;
-            } else {
-                invalid.push('nsfw'); // if it's neither, it's invalid
-            }                         // (is this how terfs think?)
-        } else {
-            invalid.push('nsfw'); // if it's a weird data type like a number or something, also error
-        }
-    } else {
-        newEntry['nsfw'] = false; // if it's not set at all, default to false
-    }
-
-    if (req.body['author']) {
-        if (typeof req.body['author'] === 'string') { // author is another optional string
-            newEntry['author'] = req.body['author'];
-        } else {
-            invalid.push('author');
-        }
-    } else {
-        newEntry['author'] = ''; // default value
-    }
-
-    if (req.body['copyright']) {
-        if (typeof req.body['copyright'] === 'string') { // same again for copyright
-            newEntry['copyright'] = req.body['copyright'];
-        } else {
-            invalid.push('copyright');
-        }
-    } else {
-        newEntry['copyright'] = '';
-    }
-
-    /* defaults for the rest */
+    newEntry = valResult;
     newEntry['alt-text'] = '';
     newEntry['origin-ip'] = req.ip;
     newEntry['timestamp'] = Date.now();
-
-    /* if anything's not valid, make an error happen */
-    if (invalid.length > 0) {
-        return errorResponse(
-            new UserError(
-                'At least one input was invalid',
-                {
-                    'status': 400, // I know this is a repeat of the status code
-                    'invalid': invalid // but it makes it much easier to parse on the front end
-                }
-            ), req, res, '.json'
-        );
-    }
+    uuid = newEntry['uri'].split('.')[0];
 
     /* process request */
-    fs.readFile(dbImagePath, (err, data) => { // read the json into memory
-        // terrible way of doing it but I don't have a realy databse so :\
-        if (err) return errorResponse(err, req, res, '.json'); // throw the error, if one is encountered. Client will see it as a 500.
-        let imagesDb = JSON.parse(data); // parse JSON
-        imagesDb[uuid] = newEntry; // add the new thing
-        fs.writeFile(dbImagePath, JSON.stringify(imagesDb), (err) => { // write the JSON back to file
-            if (err) return errorResponse(err, req, res, '.json'); // keep throwing any and all errors
-            res.status(200).json({ // give the client a response
-                'status': 200,
-                'id': uuid
-            });
+    createRecord(dbImagePath, uuid, newEntry).then(() => {
+        fs.rename(req.file.path, `uploads/${req.file.filename}`, nop);
+        res.status(200).json({
+            'status': 200,
+            'id': uuid
         });
+    }).catch(err => {
+        errorResponse(err, req, res, '.json');
     });
 });
 
 app.get('/image/get', (req, res) => {
-    let uuid = '';
-    if (!req.query['id'] || typeof req.query['id'] !== 'string') {
-        return errorResponse(
-            new UserError(
-                'At least one input was invalid',
-                {
-                    'status': 400,
-                    'invalid': ['id']
-                }
-            ), req, res, '.json'
-        );
-    }
-    uuid = req.query['id'];
+    /* get the details of an image from the server */
 
-    fs.readFile(dbImagePath, (err, data) => {
-        if (err) return errorResponse(err, req, res);
-        let imagesDb = JSON.parse(data);
-        if (!imagesDb[uuid]) {
-            return errorResponse(
-                new UserError(
-                    'Image ID was not found',
-                    {'status': 404}
-                ), req, res, '.json'
-            );
-        }
-        if (imagesDb[uuid]['view-pass'] === '') {
-            res.status(200).json({
-                'status': 200,
-                'title': imagesDb[uuid]['title'],
-                'priv': false,
-                'author': imagesDb[uuid]['author'],
-                'copyright': imagesDb[uuid]['copyright'],
-                'nsfw': imagesDb[uuid]['nsfw']
-            });
-        } else {
-            if (!req.query['view-pass']) {
-                return errorResponse(
-                    new UserError(
-                        'Image is private, no passcode sent',
-                        {'status': 401}
-                    ), req, res, '.json'
-                );
-            } else if (req.query['view-pass'] !== imagesDb[uuid]['view-pass']) {
-                return errorResponse(
-                    new UserError(
-                        'Incorrect passcode',
-                        {'status': 403}
-                    ), req, res, '.json'
-                );
-            } else {
-                res.status(200).json({
-                    'status': 200,
-                    'title': imagesDb[uuid]['title'],
-                    'priv': true,
-                    'author': imagesDb[uuid]['author'],
-                    'copyright': imagesDb[uuid]['copyright'],
-                    'nsfw': imagesDb[uuid]['nsfw']
-                });
+    /* validate */
+    let valResult = validate(req.query, {
+        'id': ['string'],
+        'view-pass': ['string', 'optional']
+    }, null, {'string': ''});
+
+    if (valResult instanceof UserError) return errorResponse(valResult, req, res, '.json');
+
+    /* process request */
+    getItemByID(dbImagePath, valResult['id']).then(data => {
+        if (data['view-pass'] !== '') {
+            if (valResult['view-pass'] === '') {
+                throw new UserError('Image is private, no passcode sent', {'status': 401});
+            } else if (valResult['view-pass'] !== data['view-pass']) {
+                throw new UserError('Incorrect passcode', {'status': 403});
             }
         }
+        res.status(200).json({
+            'status': 200,
+            'title': data['title'],
+            'priv': (data['view-pass'] !== ''),
+            'author': data['author'],
+            'copyright': data['copyright'],
+            'nsfw': data['nsfw']
+        });
+    }).catch(err => {
+        errorResponse(err, req, res, '.json');
     });
 });
 
 app.get('/image/embed', (req, res) => {
-    let uuid = '';
-    if (!req.query['id'] || typeof req.query['id'] !== 'string') {
-        return errorResponse(
-            new UserError(
-                'At least one input was invalid',
-                {
-                    'status': 400,
-                    'invalid': ['id']
-                }
-            ), req, res, '.png'
-        );
-    }
-    uuid = req.query['id'];
+    /* get an image from the server */
 
-    fs.readFile(dbImagePath, (err, data) => {
-        if (err) return errorResponse(err, req, res);
-        let imagesDb = JSON.parse(data);
-        if (!imagesDb[uuid]) {
-            return errorResponse(
-                new UserError(
-                    'Image ID was not found',
-                    {'status': 404}
-                ), req, res, '.png'
-            );
-        }
-        if (imagesDb[uuid]['view-pass'] === '') {
-            let path = `uploads/${imagesDb[uuid]['uri']}`;
-            res.status(200);
-            res.contentType(mime.contentType(imagesDb[uuid]['uri']));
-            fs.createReadStream(path).pipe(res);
-        } else {
-            if (!req.query['view-pass']) {
-                return errorResponse(
-                    new UserError(
-                        'Image is private, no passcode sent',
-                        {'status': 401}
-                    ), req, res, '.png'
-                );
-            } else if (req.query['view-pass'] !== imagesDb[uuid]['view-pass']) {
-                return errorResponse(
-                    new UserError(
-                        'Incorrect passcode',
-                        {'status': 403}
-                    ), req, res, '.png'
-                );
-            } else {
-                let path = `uploads/${imagesDb[uuid]['uri']}`;
-                res.status(200);
-                res.contentType(mime.contentType(imagesDb[uuid]['uri']));
-                fs.createReadStream(path).pipe(res);
+    /* validate */
+    let valResult = validate(req.query, {
+        'id': ['string'],
+        'view-pass': ['string', 'optional']
+    }, null, {'string': ''});
+
+    if (valResult instanceof UserError) return errorResponse(valResult, req, res, '.png');
+
+    /* process request */
+    getItemByID(dbImagePath, valResult['id']).then(data => {
+        if (data['view-pass'] !== '') {
+            if (valResult['view-pass'] === '') {
+                throw new UserError('Image is private, no passcode sent', {'status': 401});
+            } else if (valResult['view-pass'] !== data['view-pass']) {
+                throw new UserError('Incorrect passcode', {'status': 403});
             }
         }
+        res.status(200);
+        res.contentType(mime.contentType(data['uri']));
+        fs.createReadStream(`uploads/${data['uri']}`).pipe(res);
+    }).catch(err => {
+        errorResponse(err, req, res, '.png');
     });
 });
 
 app.post('/image/verify', upload.none(), (req, res) => {
-    let uuid = '';
-    let pass = '';
-    let invalid = [];
-    if (!req.body['id'] || typeof req.body['id'] !== 'string') {
-        invalid.push('id');
-    }
-    if (!req.body['edit-pass'] || typeof req.body['edit-pass'] !== 'string') {
-        invalid.push('edit-pass');
-    }
-    if (invalid.length > 0) {
-        return errorResponse(
-            new UserError(
-                'At least one input was invalid',
-                {
-                    'status': 400,
-                    'invalid': invalid
-                }
-            ), req, res, '.json'
-        );
-    }
-    uuid = req.body['id'];
-    pass = req.body['edit-pass'];
+    /* verify that an image's edit passcode is correct */
 
-    fs.readFile(dbImagePath, (err, data) => {
-        if (err) return errorResponse(err, req, res);
-        let imagesDb = JSON.parse(data);
-        if (!imagesDb[uuid]) {
-            return errorResponse(
-                new UserError(
-                    'Image ID was not found',
-                    {'status': 404}
-                ), req, res, '.json'
-            );
+    /* validate */
+    let valResult = validate(req.body, {
+        'id': ['string'],
+        'edit-pass': ['string']
+    }, null, {});
+
+    if (valResult instanceof UserError) return errorResponse(valResult, req, res, '.json');
+
+    /* process request */
+    getItemByID(dbImagePath, valResult['id']).then(data => {
+        if (valResult['edit-pass'] !== data['edit-pass']) {
+            throw new UserError('Incorrect passcode', {'status': 403});
         }
-        if (pass !== imagesDb[uuid]['edit-pass']) {
-            return errorResponse(
-                new UserError(
-                    'Incorrect passcode',
-                    {'status': 403}
-                ), req, res, '.json'
-            );
-        } else {
-            res.status(200).json({
-                'status': 200
-            });
-        }
+        res.status(200).json({'status': 200});
+    }).catch(err => {
+        errorResponse(err, req, res, '.json');
     });
+});
+
+app.post('/image/update', upload.single('file'), (req, res) => {
+    /* changes an image and/or its metadata */
+
+    let newUri, oldPath, tempPath, newPath;
+    let changes = {};
+
+    /* validate */
+    let valResult = validate(req.body, {
+        'id': ['string'],
+        'edit-pass': ['string'],
+        'title': ['string', 'optional'],
+        'file': ['image', 'optional'],
+        'view-pass': ['string', 'optional'],
+        'author': ['string', 'optional'],
+        'copyright': ['string', 'optional'],
+        'nsfw': ['boolean', 'optional']
+    }, req.file, {
+        'string': null,
+        'boolean': null,
+        'file': null
+    });
+
+    if (valResult instanceof UserError) return errorResponse(valResult, req, res, '.json');
+
+    /* process request */
+    getItemByID(dbImagePath, valResult['id']).then(data => {
+        if (valResult['edit-pass'] !== data['edit-pass']) {
+            throw new UserError('Incorrect passcode', {'status': 403});
+        }
+
+        if (valResult['uri'] !== null) {
+            newUri = `${valResult['id']}.${valResult['uri'].split('.')[1]}`;
+            oldPath = `uploads/${data['uri']}`;
+            tempPath = `uploads/temp/${valResult['uri']}`;
+            newPath = `uploads/${newUri}`;
+            changes['uri'] = newUri;
+        }
+        if (valResult['title'] !== null) changes['title'] = valResult['title'];
+        if (valResult['view-pass'] !== null) changes['view-pass'] = valResult['view-pass'];
+        if (valResult['author'] !== null) changes['author'] = valResult['author'];
+        if (valResult['copyright'] !== null) changes['copyright'] = valResult['copyright'];
+        if (valResult['nsfw'] !== null) changes['nsfw'] = valResult['nsfw'];
+
+        return updateRecord(dbImagePath, valResult['id'], changes);
+
+    }).then(() => {
+        if ('uri' in changes) fs.unlink(oldPath, () => fs.rename(tempPath, newPath, nop));
+        res.status(200).json({'status': 200});
+
+    }).catch(err => {
+        errorResponse(err, req, res, '.json');
+    });
+});
+
+app.get('*', (req, res) => {
+    return errorResponse(
+        new UserError(
+            'URI not found',
+            {'status': 404}
+        ), req, res, '.html'
+    );
+});
+
+app.post('*', (req, res) => {
+    return errorResponse(
+        new UserError(
+            'URI not found',
+            {'status': 404}
+        ), req, res, '.json'
+    );
 });
 
 module.exports = app;

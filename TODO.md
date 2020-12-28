@@ -1,17 +1,20 @@
 # Front End
 
-- Refactor everything
-- Update form functionality
-- info-update modal
-- Update form 'delete' button - confirmation modal
+- Delete image functionality
 - Comments section
 
 # Back End
 
-- Call to edit data of an image
+- DB functions: delete record
 - Call to delete an image
 - Call to go directly to viewing an image when using GET paramaters
+- Call to list images, even though it won't be implemented on the front end
 
 # Misc
+
 - HTML error pages
 - Jest testing - work out how to test file upload
+- Clean up after testing: database file(s), uploads and uploads/temp folders
+- API documentation
+- Demonstration video (ugh)
+- Check HTML standards (linting for html?)
