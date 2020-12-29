@@ -50,10 +50,6 @@ body {
     margin-top: 15px;
 }
 
-.col-md-6 {
-    margin-bottom: 15px;
-}
-
 h1, h2, h3, p {
     text-align: center;
     font-family: 'Poppins', sans-serif;
@@ -91,6 +87,7 @@ p {
     padding: 1em 0;
     background-color: #1c1c1c;
     border: 2px solid green;
+    margin-bottom: 15px;
 }
 
 .drop-btn-small {
@@ -99,6 +96,7 @@ p {
 
 .drop-btn-open {
     border-radius: 8px 8px 0 0;
+    margin-bottom: 0;
 }
 
 .drop-btn:hover {
@@ -106,7 +104,7 @@ p {
     background-color: green;
 }
 
-button:focus, input:focus {
+button:focus, input:focus, textarea:focus {
     outline: none;
 }
 
@@ -114,6 +112,7 @@ button:focus, input:focus {
     border: none;
     padding: 0;
     display: none;
+    margin-bottom: 15px;
 }
 
 .drop-frm-open {
@@ -137,10 +136,6 @@ button:focus, input:focus {
     display: inline-block;
 }
 
-.info {
-    float: right;
-}
-
 .file-prev {
     margin-left: 0;
 }
@@ -152,7 +147,7 @@ input[type="text"] {
     border-bottom: 2px solid #bfbfbf;
 }
 
-input[type="text"]:hover, input[type="text"]:focus, .clps-btn:hover, .clps-btn:focus, .toggle-word:hover, .toggle-word:focus, .icon-btn:hover, .icon-btn:focus, input:hover+.btn-block>.icon-btn:first-child, input:focus+.btn-block>.icon-btn:first-child {
+input[type="text"]:hover, input[type="text"]:focus, .clps-btn:hover, .clps-btn:focus, .toggle-word:hover, .toggle-word:focus, .icon-btn:hover, .icon-btn:focus, input:hover+.btn-block>.icon-btn:first-child, input:focus+.btn-block>.icon-btn:first-child, textarea:hover, textarea:focus {
     color: green;
     border-color: green;
 }
@@ -168,6 +163,15 @@ input[type="checkbox"] {
 
 input[type="file"] {
     display: none;
+}
+
+textarea {
+    background-color: inherit;
+    color: inherit;
+    border: none;
+    border-bottom: 2px solid #bfbfbf;
+    width: 100%;
+    resize: none;
 }
 
 input[type="submit"] {
@@ -227,8 +231,17 @@ input[type="submit"]:hover:enabled, input[type="submit"]:focus, .btn:hover:enabl
     background-color: inherit;
     border: none;
     color: #bfbfbf;
-    font-size: 1.5em;
+    font-size: 2rem;
     padding: 0;
+}
+
+.info {
+    float: right;
+    font-size: 2em;
+}
+
+.info .material-icons-outlined {
+    vertical-align: top;
 }
 
 .icon-float-left {
@@ -239,6 +252,11 @@ input[type="submit"]:hover:enabled, input[type="submit"]:focus, .btn:hover:enabl
 .material-icons {
     font-size: inherit;
     vertical-align: text-bottom;
+}
+
+.material-icons-outlined {
+    font-size: inherit;
+    vertical-align: middle;
 }
 
 .btn-block {
@@ -278,4 +296,8 @@ input[type="submit"]:hover:enabled, input[type="submit"]:focus, .btn:hover:enabl
 
 .display-sidebar {
     padding-top: 15px;
+}
+
+#display-permalink {
+    font-size: 0.7em;
 }

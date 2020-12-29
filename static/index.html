@@ -140,6 +140,21 @@
                 </div>
             </div>
         </div>
+        <div class="modal hide" tabindex="-1" role="dialog" id="info-copyright" data-buttonclass="info-copyright-btn">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body info-content">
+                        <button type="button" class="close info-copyright-btn" data-return="close" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                        <p id="info-copyright-text"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary btn-grn info-copyright-btn" data-return="okay">Okay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="modal hide" tabindex="-1" role="dialog" id="info-unlock" data-buttonclass="info-unlock-btn">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -265,8 +280,8 @@
                                     <div class='clps-frm hide' id='clps-frm-upload'>
                                         <label for="upload-author" class="frm-field">Author Name</label>
                                             <input name='author' type='text' id='upload-author'><br>
-                                        <label for="upload-copyright" class="frm-field">Copyright Information</label>
-                                            <input name='copyright' type='text' id='upload-copyright'><br>
+                                        <label for="upload-copyright" class="frm-field">Copyright Information</label><br>
+                                            <textarea rows="5" name='copyright' type='text' id='upload-copyright'></textarea><br>
                                         <label for="upload-nsfw" class="frm-field">Mark as NSFW</label>
                                             <input name='nsfw' type='checkbox' id='upload-nsfw'>
                                             <div class="btn-block">
@@ -306,8 +321,18 @@
                     <img id="display-image" src="data:," alt>
                 </div>
                 <div class="col-md-4 display-sidebar">
+                    <p>
+                        Direct Link: <input type="text" id="display-permalink" readonly></span>
+                        <button class="icon-btn" type="button" id="display-permalink-copy">
+                            <i class="material-icons">content_copy</i>
+                        </button>
+                    </p>
                     <p id="display-author">Published by <span></span></p>
-                    <p id="display-copyright">Copyright: <span></span></p>
+                    <p id="display-copyright">Copyright info
+                        <button class="icon-btn" type="button" id="copyright-info">
+                            <i class="material-icons-outlined">info</i>
+                        </button>
+                    </p>
                     <button class="drop-btn drop-btn-small" id="drop-unlock">Change this image</button>
                     <form class="drop-frm" id="frm-unlock">
                         <div class="drop-frm-fields">
@@ -367,7 +392,7 @@
                                 <label for="update-author" class="frm-field">Author Name</label>
                                     <input name='author' type='text' id='update-author'><br>
                                 <label for="update-copyright" class="frm-field">Copyright Information</label>
-                                    <input name='copyright' type='text' id='update-copyright'><br>
+                                    <textarea rows="5" name='copyright' type='text' id='update-copyright'></textarea><br>
                                 <label for="update-nsfw" class="frm-field">Mark as NSFW</label>
                                     <input name='nsfw' type='checkbox' id='update-nsfw'>
                                     <div class="btn-block">
@@ -379,9 +404,22 @@
                         </div>
                         <input type='submit' value='Update' id='update-submit' class="btn-grn">
                     </form>
-                    <!-- <div id="display-comments-list">
+                    <div id="display-comments-list">
                         
-                    </div> -->
+                    </div>
+                    <button class="drop-btn drop-btn-small" id="drop-comment">Leave a comment</button>
+                    <form class="drop-frm" id="frm-comment">
+                        <div class="drop-frm-fields">
+                            <button class="info icon-btn" type="button" id="comment-info">
+                                <i class="material-icons-outlined">info</i>
+                            </button>
+                            <label for="comment-display-name" class="frm-field">Display Name</label>
+                                <input name='display-name' type='text' id='comment-display-name'><br>
+                            <label for="comment-text" class="frm-field">Comment Text</label><br>
+                                <textarea rows="5" name="text" id="comment-text"></textarea>
+                        </div>
+                        <input type='submit' value='Leave Comment' id='comment-submit' class="btn-grn">
+                    </form>
                 </div>
             </div>
         </div>

@@ -319,6 +319,9 @@ const displayImage = () => {
     }
 
     displayImg.setAttribute('src', '/image/embed?'+imageUrl.toString());
+    const location = window.location;
+    document.getElementById('display-permalink').value =
+        `${location.protocol}//${location.hostname}:${location.port}/image/embed?${imageUrl.toString()}`;
 
     const authorDisplay = document.getElementById('display-author');
     authorDisplay.classList[
@@ -326,11 +329,10 @@ const displayImage = () => {
     ]('hide');
     authorDisplay.firstElementChild.innerText = currentImage['author'];
 
-    const copyrightDisplay = document.getElementById('display-copyright');
-    copyrightDisplay.classList[
+    document.getElementById('display-copyright').classList[
         currentImage['copyright'] === '' ? 'add' : 'remove'
     ]('hide');
-    copyrightDisplay.firstElementChild.innerText = currentImage['copyright'];
+    document.getElementById('info-copyright-text').innerText = currentImage['copyright'];
 };
 
 const unloadImage = () => {
@@ -432,6 +434,11 @@ document.getElementById('success-upload-view-copy').addEventListener('click', (e
 document.getElementById('drop-view').addEventListener('click', (e) => dropClick(e, 'view'));
 document.getElementById('view-info').addEventListener('click', (e) => displayPopup('info-view', nop));
 
+/* image display */
+document.getElementById('display-permalink').addEventListener('click', (e) => transferClick(e, 'display-permalink-copy'));
+document.getElementById('display-permalink-copy').addEventListener('click', (e) => copyField('display-permalink'));
+document.getElementById('copyright-info').addEventListener('click', (e) => displayPopup('info-copyright', nop));
+
 /* unlock form */
 document.getElementById('drop-unlock').addEventListener('click', (e) => dropClick(e, 'unlock'));
 document.getElementById('unlock-info').addEventListener('click', (e) => displayPopup('info-unlock', nop));
@@ -457,6 +464,9 @@ document.getElementById('clps-btn-update').addEventListener('change', (e) => {
 });
 document.getElementById('update-nsfw-tog').addEventListener('click', (e) => transferClick(e, 'update-nsfw'));
 document.getElementById('update-nsfw').addEventListener('change', (e) => checkboxChangeMsg(e, 'update-nsfw-msg', 'check', 'close'));
+
+/* comment form */
+document.getElementById('drop-comment').addEventListener('click', (e) => dropClick(e, 'comment'));
 
 /*
     === unique handlers ===
