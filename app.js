@@ -82,7 +82,7 @@ const upload = multer({
     validation
 */
 const validate = (body, rules, file, defaults) => {
-    /* validate a request body according to some rules, returning either a validated object or an error */
+    /* validate a request body according to some rules, returns validated object or throws error */
 
     let newEntry = {};
     let invalid = [];
@@ -106,7 +106,7 @@ const validate = (body, rules, file, defaults) => {
                 invalid.push(key);
             }
         }
-        return new UserError(
+        throw new UserError(
             'No input was sent',
             {
                 'status': 400,
@@ -151,7 +151,7 @@ const validate = (body, rules, file, defaults) => {
         }
     }
     if (invalid.length > 0) {
-        return new UserError(
+        throw new UserError(
             'At least one input was invalid',
             {
                 'status': 400,
@@ -205,7 +205,7 @@ const updateRecord = (dbPath, uuid, changes) => {
         fs.readFile(dbPath, (err, data) => {
             if (err) return reject(err);
             let jsonData = JSON.parse(data);
-            if (!(uuid in jsonData)) return reject(new UserError('UUID not found', {'status': 500}));
+            if (!(uuid in jsonData)) return reject(new UserError('UUID not found', {'status': 404}));
             let updatedRecord = jsonData[uuid];
             for (let [key, value] of Object.entries(changes)) {
                 if (key in updatedRecord) {
@@ -215,6 +215,23 @@ const updateRecord = (dbPath, uuid, changes) => {
                 }
             }
             jsonData[uuid] = updatedRecord;
+            fs.writeFile(dbPath, JSON.stringify(jsonData), (err) => {
+                if (err) return reject(err);
+                return resolve();
+            });
+        });
+    });
+};
+
+const deleteRecord = (dbPath, uuid) => {
+    /* completely remove the record at uuid */
+
+    return new Promise((resolve, reject) => {
+        fs.readFile(dbPath, (err, data) => {
+            if (err) return reject(err);
+            let jsonData = JSON.parse(data);
+            if (!(uuid in jsonData)) return reject(new UserError('UUID not found', {'status': 404}));
+            if (!(delete jsonData[uuid])) return reject(new Error('Could not delete record'));
             fs.writeFile(dbPath, JSON.stringify(jsonData), (err) => {
                 if (err) return reject(err);
                 return resolve();
@@ -235,23 +252,25 @@ app.use(express.static('static/'));
 app.post('/image/upload', upload.single('file'), (req, res) => {
     /* upload an image to the server */
 
-    let newEntry, uuid;
+    let newEntry, uuid, valResult;
     
     /* validate */
-    let valResult = validate(req.body, {
-        'title': ['string'],
-        'edit-pass': ['string'],
-        'view-pass': ['string', 'optional'],
-        'nsfw': ['boolean', 'optional'],
-        'author': ['string', 'optional'],
-        'copyright': ['string', 'optional'],
-        'file': ['image']
-    }, req.file, {
-        'string': '',
-        'boolean': false,
-    });
-
-    if (valResult instanceof UserError) return errorResponse(valResult, req, res, '.json');
+    try {
+        valResult = validate(req.body, {
+            'title': ['string'],
+            'edit-pass': ['string'],
+            'view-pass': ['string', 'optional'],
+            'nsfw': ['boolean', 'optional'],
+            'author': ['string', 'optional'],
+            'copyright': ['string', 'optional'],
+            'file': ['image']
+        }, req.file, {
+            'string': '',
+            'boolean': false,
+        });
+    } catch (err) {
+        return errorResponse(err, req, res, '.json');
+    }
 
     newEntry = valResult;
     newEntry['alt-text'] = '';
@@ -274,13 +293,17 @@ app.post('/image/upload', upload.single('file'), (req, res) => {
 app.get('/image/get', (req, res) => {
     /* get the details of an image from the server */
 
-    /* validate */
-    let valResult = validate(req.query, {
-        'id': ['string'],
-        'view-pass': ['string', 'optional']
-    }, null, {'string': ''});
+    let valResult;
 
-    if (valResult instanceof UserError) return errorResponse(valResult, req, res, '.json');
+    /* validate */
+    try {
+        valResult = validate(req.query, {
+            'id': ['string'],
+            'view-pass': ['string', 'optional']
+        }, null, {'string': ''});
+    } catch (err) {
+        return errorResponse(err, req, res, '.json');
+    }
 
     /* process request */
     getItemByID(dbImagePath, valResult['id']).then(data => {
@@ -307,13 +330,17 @@ app.get('/image/get', (req, res) => {
 app.get('/image/embed', (req, res) => {
     /* get an image from the server */
 
-    /* validate */
-    let valResult = validate(req.query, {
-        'id': ['string'],
-        'view-pass': ['string', 'optional']
-    }, null, {'string': ''});
+    let valResult;
 
-    if (valResult instanceof UserError) return errorResponse(valResult, req, res, '.png');
+    /* validate */
+    try {
+        valResult = validate(req.query, {
+            'id': ['string'],
+            'view-pass': ['string', 'optional']
+        }, null, {'string': ''});
+    } catch (err) {
+        return errorResponse(err, req, res, '.png');
+    }
 
     /* process request */
     getItemByID(dbImagePath, valResult['id']).then(data => {
@@ -335,13 +362,17 @@ app.get('/image/embed', (req, res) => {
 app.post('/image/verify', upload.none(), (req, res) => {
     /* verify that an image's edit passcode is correct */
 
-    /* validate */
-    let valResult = validate(req.body, {
-        'id': ['string'],
-        'edit-pass': ['string']
-    }, null, {});
+    let valResult;
 
-    if (valResult instanceof UserError) return errorResponse(valResult, req, res, '.json');
+    /* validate */
+    try {
+        valResult = validate(req.body, {
+            'id': ['string'],
+            'edit-pass': ['string']
+        }, null, {});
+    } catch (err) {
+        return errorResponse(err, req, res, '.json');
+    }
 
     /* process request */
     getItemByID(dbImagePath, valResult['id']).then(data => {
@@ -357,26 +388,28 @@ app.post('/image/verify', upload.none(), (req, res) => {
 app.post('/image/update', upload.single('file'), (req, res) => {
     /* changes an image and/or its metadata */
 
-    let newUri, oldPath, tempPath, newPath;
+    let newUri, oldPath, tempPath, newPath, valResult;
     let changes = {};
 
     /* validate */
-    let valResult = validate(req.body, {
-        'id': ['string'],
-        'edit-pass': ['string'],
-        'title': ['string', 'optional'],
-        'file': ['image', 'optional'],
-        'view-pass': ['string', 'optional'],
-        'author': ['string', 'optional'],
-        'copyright': ['string', 'optional'],
-        'nsfw': ['boolean', 'optional']
-    }, req.file, {
-        'string': null,
-        'boolean': null,
-        'file': null
-    });
-
-    if (valResult instanceof UserError) return errorResponse(valResult, req, res, '.json');
+    try {
+        valResult = validate(req.body, {
+            'id': ['string'],
+            'edit-pass': ['string'],
+            'title': ['string', 'optional'],
+            'file': ['image', 'optional'],
+            'view-pass': ['string', 'optional'],
+            'author': ['string', 'optional'],
+            'copyright': ['string', 'optional'],
+            'nsfw': ['boolean', 'optional']
+        }, req.file, {
+            'string': null,
+            'boolean': null,
+            'file': null
+        });
+    } catch (err) {
+        return errorResponse(err, req, res, '.json');
+    }
 
     /* process request */
     getItemByID(dbImagePath, valResult['id']).then(data => {
@@ -386,7 +419,7 @@ app.post('/image/update', upload.single('file'), (req, res) => {
 
         if (valResult['uri'] !== null) {
             newUri = `${valResult['id']}.${valResult['uri'].split('.')[1]}`;
-            oldPath = `uploads/${data['uri']}`;
+            if (data['uri'] !== 'removed.png') oldPath = `uploads/${data['uri']}`;
             tempPath = `uploads/temp/${valResult['uri']}`;
             newPath = `uploads/${newUri}`;
             changes['uri'] = newUri;
@@ -400,7 +433,47 @@ app.post('/image/update', upload.single('file'), (req, res) => {
         return updateRecord(dbImagePath, valResult['id'], changes);
 
     }).then(() => {
-        if ('uri' in changes) fs.unlink(oldPath, () => fs.rename(tempPath, newPath, nop));
+        if ('uri' in changes) {
+            if (oldPath !== undefined) {
+                fs.unlink(oldPath, () => fs.rename(tempPath, newPath, nop));
+            } else {
+                fs.rename(tempPath, newPath, nop);
+            }
+        }
+        res.status(200).json({'status': 200});
+
+    }).catch(err => {
+        errorResponse(err, req, res, '.json');
+    });
+});
+
+app.post('/image/delete', upload.none(), (req, res) => {
+    /* removes an image and all of its metadata */
+
+    let imagePath, valResult;
+
+    /* validate */
+    try {
+        valResult = validate(req.body, {
+            'id': ['string'],
+            'edit-pass': ['string']
+        }, null, {});
+    } catch (err) {
+        return errorResponse(err, req, res, '.json');
+    }
+
+    /* process request */
+    getItemByID(dbImagePath, valResult['id']).then(data => {
+        if (valResult['edit-pass'] !== data['edit-pass']) {
+            throw new UserError('Incorrect passcode', {'status': 403});
+        }
+
+        if (data['uri'] !== 'removed.png') imagePath = `uploads/${data['uri']}`;
+
+        return deleteRecord(dbImagePath, valResult['id']);
+
+    }).then(() => {
+        if (imagePath !== undefined) fs.unlink(imagePath, nop);
         res.status(200).json({'status': 200});
 
     }).catch(err => {

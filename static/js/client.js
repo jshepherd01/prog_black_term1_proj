@@ -340,7 +340,7 @@ const unloadImage = () => {
     resetForm('unlock');
     resetForm('update');
     document.getElementById('image-display-row').classList.add('hide');
-    document.getElementById('display-image').setAttribute('src','');
+    document.getElementById('display-image').setAttribute('src','data:,');
 };
 
 /*
@@ -713,7 +713,6 @@ document.getElementById('update-delete').addEventListener('click', (e) => {
             }, () => {
                 unloadImage();
                 displayPopup('delete-success', nop);
-                // TODO test this
             });
         }
     });
