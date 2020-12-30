@@ -12,6 +12,7 @@ const mime = require('mime-types');
     globals
 */
 const dbImagePath = 'data/image-db.json';
+const dbCommentPath = 'data/comment-db.json';
 
 /* no operation */
 const nop = () => {};
@@ -84,83 +85,85 @@ const upload = multer({
 const validate = (body, rules, file, defaults) => {
     /* validate a request body according to some rules, returns validated object or throws error */
 
-    let newEntry = {};
-    let invalid = [];
-    if ('file' in rules) {
-        if (file) {
-            if (rules['file'].includes(file.mimetype.split('/')[0])) {
-                newEntry['uri'] = file.filename;
+    return new Promise((resolve, reject) => {
+        let newEntry = {};
+        let invalid = [];
+        if ('file' in rules) {
+            if (file) {
+                if (rules['file'].includes(file.mimetype.split('/')[0])) {
+                    newEntry['uri'] = file.filename;
+                } else {
+                    invalid.push('file');
+                }
+            } else if (rules['file'].includes('optional')) {
+                newEntry['uri'] = defaults['file'];
             } else {
                 invalid.push('file');
             }
-        } else if (rules['file'].includes('optional')) {
-            newEntry['uri'] = defaults['file'];
-        } else {
-            invalid.push('file');
         }
-    }
-    if (!body) {
-        /* check for an empty body */
-        for (let [key, value] of Object.entries(rules)) {
-            if (!('optional' in value) && key !== 'file') {
-                invalid.push(key);
-            }
-        }
-        throw new UserError(
-            'No input was sent',
-            {
-                'status': 400,
-                'invalid': invalid
-            }
-        );
-    }
-    for (let [key, value] of Object.entries(rules)) {
-        /* check the body for each rule */
-        if (key === 'file') continue;
-        if (key in body) {
-            if (body[key] !== '') {
-                if (typeof body[key] !== 'string') {
+        if (!body) {
+            /* check for an empty body */
+            for (let [key, value] of Object.entries(rules)) {
+                if (!('optional' in value) && key !== 'file') {
                     invalid.push(key);
-
-                } else if (value.includes('string')) {
-                    newEntry[key] = body[key];
-
-                } else if (value.includes('boolean')) {
-                    if (body[key] === 'true') {
-                        newEntry[key] = true;
-                    } else if (body[key] === 'false') {
-                        newEntry[key] = false;
-                    } else {
+                }
+            }
+            return reject(new UserError(
+                'No input was sent',
+                {
+                    'status': 400,
+                    'invalid': invalid
+                }
+            ));
+        }
+        for (let [key, value] of Object.entries(rules)) {
+            /* check the body for each rule */
+            if (key === 'file') continue;
+            if (key in body) {
+                if (body[key] !== '') {
+                    if (typeof body[key] !== 'string') {
                         invalid.push(key);
+
+                    } else if (value.includes('string')) {
+                        newEntry[key] = body[key];
+
+                    } else if (value.includes('boolean')) {
+                        if (body[key] === 'true') {
+                            newEntry[key] = true;
+                        } else if (body[key] === 'false') {
+                            newEntry[key] = false;
+                        } else {
+                            invalid.push(key);
+                        }
+
+                    } else {
+                        throw new Error(`data type ${value} not implemented for ${key}`);
                     }
 
+                } else if (value.includes('optional')) {
+                    newEntry[key] = (value.includes('string')) ? body[key] : false;
                 } else {
-                    throw new Error(`data type ${value} not implemented for ${key}`);
+                    invalid.push(key);
                 }
 
             } else if (value.includes('optional')) {
-                newEntry[key] = (value.includes('string')) ? body[key] : false;
+                newEntry[key] = (value.includes('string')) ? defaults['string'] : defaults['boolean'];
             } else {
                 invalid.push(key);
             }
-
-        } else if (value.includes('optional')) {
-            newEntry[key] = (value.includes('string')) ? defaults['string'] : defaults['boolean'];
-        } else {
-            invalid.push(key);
         }
-    }
-    if (invalid.length > 0) {
-        throw new UserError(
-            'At least one input was invalid',
-            {
-                'status': 400,
-                'invalid': invalid
-            }
-        );
-    } else {
-        return newEntry;
-    }
+        if (invalid.length > 0) {
+            return reject(new UserError(
+                'At least one input was invalid',
+                {
+                    'status': 400,
+                    'invalid': invalid
+                }
+            ));
+        } else {
+            return resolve(newEntry);
+        }
+    });
 };
 
 /*
@@ -178,6 +181,41 @@ const getItemByID = (dbPath, uuid) => {
                 'UUID not found',
                 {'status': 404}
             ));
+        });
+    });
+};
+
+const getItemsByField = (dbPath, params) => {
+    /* get all items from the file at dbPath that match params */
+
+    return new Promise((resolve, reject) => {
+        fs.readFile(dbPath, (err, data) => {
+            if (err) return reject(err);
+            let jsonData = JSON.parse(data);
+            let matches = {};
+            /* iterate over the database, then the parameters */
+            for (let [dataKey, dataVal] of Object.entries(jsonData)) {
+                let match = true;
+                for (let [paramKey, paramVal] of Object.entries(params)) {
+                    if (!(paramKey in dataVal)) {
+                        /* first time datum fails a parameter, move onto the next one */
+                        match = false;
+                        break;
+                    } else if (paramVal instanceof RegExp) {
+                        if (!paramVal.test(dataVal[paramKey])) {
+                            match = false;
+                            break;
+                        }
+                    } else if (dataVal[paramKey] !== paramVal) {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match) {
+                    matches[dataKey] = dataVal;
+                }
+            }
+            return resolve(matches);
         });
     });
 };
@@ -253,38 +291,36 @@ app.post('/image/upload', upload.single('file'), (req, res) => {
     /* upload an image to the server */
 
     let newEntry, uuid, valResult;
-    
-    /* validate */
-    try {
-        valResult = validate(req.body, {
-            'title': ['string'],
-            'edit-pass': ['string'],
-            'view-pass': ['string', 'optional'],
-            'nsfw': ['boolean', 'optional'],
-            'author': ['string', 'optional'],
-            'copyright': ['string', 'optional'],
-            'file': ['image']
-        }, req.file, {
-            'string': '',
-            'boolean': false,
-        });
-    } catch (err) {
-        return errorResponse(err, req, res, '.json');
-    }
 
-    newEntry = valResult;
-    newEntry['alt-text'] = '';
-    newEntry['origin-ip'] = req.ip;
-    newEntry['timestamp'] = Date.now();
-    uuid = newEntry['uri'].split('.')[0];
+    validate(req.body, {
+        'title': ['string'],
+        'edit-pass': ['string'],
+        'view-pass': ['string', 'optional'],
+        'nsfw': ['boolean', 'optional'],
+        'author': ['string', 'optional'],
+        'copyright': ['string', 'optional'],
+        'file': ['image']
+    }, req.file, {
+        'string': '',
+        'boolean': false,
+    }).then(ret => {
+        valResult = ret;
 
-    /* process request */
-    createRecord(dbImagePath, uuid, newEntry).then(() => {
+        newEntry = valResult;
+        newEntry['alt-text'] = '';
+        newEntry['origin-ip'] = req.ip;
+        newEntry['timestamp'] = Date.now();
+        uuid = newEntry['uri'].split('.')[0];
+
+        return createRecord(dbImagePath, uuid, newEntry);
+        
+    }).then(() => {
         fs.rename(req.file.path, `uploads/${req.file.filename}`, nop);
         res.status(200).json({
             'status': 200,
             'id': uuid
         });
+
     }).catch(err => {
         errorResponse(err, req, res, '.json');
     });
@@ -295,18 +331,15 @@ app.get('/image/get', (req, res) => {
 
     let valResult;
 
-    /* validate */
-    try {
-        valResult = validate(req.query, {
-            'id': ['string'],
-            'view-pass': ['string', 'optional']
-        }, null, {'string': ''});
-    } catch (err) {
-        return errorResponse(err, req, res, '.json');
-    }
+    validate(req.query, {
+        'id': ['string'],
+        'view-pass': ['string', 'optional']
+    }, null, {'string': ''}).then(ret => {
+        valResult = ret;
 
-    /* process request */
-    getItemByID(dbImagePath, valResult['id']).then(data => {
+        return getItemByID(dbImagePath, valResult['id']);
+
+    }).then(data => {
         if (data['view-pass'] !== '') {
             if (valResult['view-pass'] === '') {
                 throw new UserError('Image is private, no passcode sent', {'status': 401});
@@ -322,6 +355,7 @@ app.get('/image/get', (req, res) => {
             'copyright': data['copyright'],
             'nsfw': data['nsfw']
         });
+
     }).catch(err => {
         errorResponse(err, req, res, '.json');
     });
@@ -332,18 +366,15 @@ app.get('/image/embed', (req, res) => {
 
     let valResult;
 
-    /* validate */
-    try {
-        valResult = validate(req.query, {
-            'id': ['string'],
-            'view-pass': ['string', 'optional']
-        }, null, {'string': ''});
-    } catch (err) {
-        return errorResponse(err, req, res, '.png');
-    }
+    validate(req.query, {
+        'id': ['string'],
+        'view-pass': ['string', 'optional']
+    }, null, {'string': ''}).then(ret => {
+        valResult = ret;
 
-    /* process request */
-    getItemByID(dbImagePath, valResult['id']).then(data => {
+        return getItemByID(dbImagePath, valResult['id']);
+
+    }).then(data => {
         if (data['view-pass'] !== '') {
             if (valResult['view-pass'] === '') {
                 throw new UserError('Image is private, no passcode sent', {'status': 401});
@@ -354,8 +385,55 @@ app.get('/image/embed', (req, res) => {
         res.status(200);
         res.contentType(mime.contentType(data['uri']));
         fs.createReadStream(`uploads/${data['uri']}`).pipe(res);
+
     }).catch(err => {
         errorResponse(err, req, res, '.png');
+    });
+});
+
+app.get('/image/list', (req, res) => {
+    /* list all non-private images */
+    /* filters out nsfw by default. Include ?nsfw parameter to include nsfw results
+    and ?nsfw=true to remove sfw results */
+
+    let valResult;
+    let params = {'view-pass': /^$/};
+    let imagesList = [];
+
+    validate(req.query, {
+        'nsfw': ['boolean', 'optional']
+    }, null, {'boolean': null}).then(ret => {
+        valResult = ret;
+
+        switch (valResult['nsfw']) {
+            case true:
+                params['nsfw'] = true;
+                break;
+            
+            case null:
+                params['nsfw'] = false;
+                break;
+        }
+
+        return getItemsByField(dbImagePath, params);
+
+    }).then(data => {
+        for (let [key, value] of Object.entries(data)) {
+            let thisImage = {};
+            thisImage['id'] = key;
+            thisImage['title'] = value['title'];
+            thisImage['author'] = value['author'];
+            thisImage['copyright'] = value['copyright'];
+            thisImage['nsfw'] = value['nsfw'];
+            imagesList.push(thisImage);
+        }
+        res.status(200).json({
+            'status': 200,
+            'images': imagesList
+        });
+
+    }).catch(err => {
+        errorResponse(err, req, res, '.json');
     });
 });
 
@@ -364,22 +442,20 @@ app.post('/image/verify', upload.none(), (req, res) => {
 
     let valResult;
 
-    /* validate */
-    try {
-        valResult = validate(req.body, {
-            'id': ['string'],
-            'edit-pass': ['string']
-        }, null, {});
-    } catch (err) {
-        return errorResponse(err, req, res, '.json');
-    }
+    validate(req.body, {
+        'id': ['string'],
+        'edit-pass': ['string']
+    }, null, {}).then(ret => {
+        valResult = ret;
 
-    /* process request */
-    getItemByID(dbImagePath, valResult['id']).then(data => {
+        return getItemByID(dbImagePath, valResult['id']);
+
+    }).then(data => {
         if (valResult['edit-pass'] !== data['edit-pass']) {
             throw new UserError('Incorrect passcode', {'status': 403});
         }
         res.status(200).json({'status': 200});
+
     }).catch(err => {
         errorResponse(err, req, res, '.json');
     });
@@ -390,29 +466,26 @@ app.post('/image/update', upload.single('file'), (req, res) => {
 
     let newUri, oldPath, tempPath, newPath, valResult;
     let changes = {};
+    
+    validate(req.body, {
+        'id': ['string'],
+        'edit-pass': ['string'],
+        'title': ['string', 'optional'],
+        'file': ['image', 'optional'],
+        'view-pass': ['string', 'optional'],
+        'author': ['string', 'optional'],
+        'copyright': ['string', 'optional'],
+        'nsfw': ['boolean', 'optional']
+    }, req.file, {
+        'string': null,
+        'boolean': null,
+        'file': null
+    }).then(ret => {
+        valResult = ret;
 
-    /* validate */
-    try {
-        valResult = validate(req.body, {
-            'id': ['string'],
-            'edit-pass': ['string'],
-            'title': ['string', 'optional'],
-            'file': ['image', 'optional'],
-            'view-pass': ['string', 'optional'],
-            'author': ['string', 'optional'],
-            'copyright': ['string', 'optional'],
-            'nsfw': ['boolean', 'optional']
-        }, req.file, {
-            'string': null,
-            'boolean': null,
-            'file': null
-        });
-    } catch (err) {
-        return errorResponse(err, req, res, '.json');
-    }
+        return getItemByID(dbImagePath, valResult['id']);
 
-    /* process request */
-    getItemByID(dbImagePath, valResult['id']).then(data => {
+    }).then(data => {
         if (valResult['edit-pass'] !== data['edit-pass']) {
             throw new UserError('Incorrect passcode', {'status': 403});
         }
@@ -452,18 +525,15 @@ app.post('/image/delete', upload.none(), (req, res) => {
 
     let imagePath, valResult;
 
-    /* validate */
-    try {
-        valResult = validate(req.body, {
-            'id': ['string'],
-            'edit-pass': ['string']
-        }, null, {});
-    } catch (err) {
-        return errorResponse(err, req, res, '.json');
-    }
+    validate(req.body, {
+        'id': ['string'],
+        'edit-pass': ['string']
+    }, null, {}).then(ret => {
+        valResult = ret;
 
-    /* process request */
-    getItemByID(dbImagePath, valResult['id']).then(data => {
+        return getItemByID(dbImagePath, valResult['id']);
+
+    }).then(data => {
         if (valResult['edit-pass'] !== data['edit-pass']) {
             throw new UserError('Incorrect passcode', {'status': 403});
         }
@@ -475,6 +545,93 @@ app.post('/image/delete', upload.none(), (req, res) => {
     }).then(() => {
         if (imagePath !== undefined) fs.unlink(imagePath, nop);
         res.status(200).json({'status': 200});
+
+    }).catch(err => {
+        errorResponse(err, req, res, '.json');
+    });
+});
+
+app.post('/comment/upload', upload.none(), (req, res) => {
+    /* adds a comment to an image */
+
+    let newUUID, valResult;
+    let newEntry = {};
+
+    validate(req.body, {
+        'id': ['string'],
+        'view-pass': ['string', 'optional'],
+        'display-name': ['string', 'optional'],
+        'text': ['string']
+    }, null, {'string': ''}).then(ret => {
+        valResult = ret;
+
+        return getItemByID(dbImagePath, valResult['id']);
+
+    }).then(data => {
+        if (data['view-pass'] !== '') {
+            if (valResult['view-pass'] === '') {
+                throw new UserError('Image is private, no passcode sent', {'status': 401});
+            } else if (valResult['view-pass'] !== data['view-pass']) {
+                throw new UserError('Incorrect passcode', {'status': 403});
+            }
+        }
+        newUUID = uuidv4();
+        newEntry['image-id'] = valResult['id'];
+        newEntry['display-name'] = valResult['display-name'] || 'Anonymous';
+        newEntry['text'] = valResult['text'];
+        newEntry['origin-ip'] = req.ip;
+        newEntry['timestamp'] = Date.now();
+
+        return createRecord(dbCommentPath, newUUID, newEntry);
+
+    }).then(() => {
+        res.status(200).json({
+            'status': 200,
+            'id': newUUID
+        });
+
+    }).catch(err => {
+        errorResponse(err, req, res, '.json');
+    });
+});
+
+app.get('/comment/list', (req, res) => {
+    /* returns a list of comments associated with an image */
+
+    let valResult;
+    let commentsList = [];
+
+    validate(req.query, {
+        'id': ['string'],
+        'view-pass': ['string', 'optional']
+    }, null, {'string': ''}).then(ret => {
+        valResult = ret;
+
+        return getItemByID(dbImagePath, valResult['id']);
+    }).then(data => {
+        if (data['view-pass'] !== '') {
+            if (valResult['view-pass'] === '') {
+                throw new UserError('Image is private, no passcode sent', {'status': 401});
+            } else if (valResult['view-pass'] !== data['view-pass']) {
+                throw new UserError('Incorrect passcode', {'status': 403});
+            }
+        }
+        
+        return getItemsByField(dbCommentPath, {'image-id': valResult['id']});
+
+    }).then(data => {
+        for (let [key, value] of Object.entries(data)) {
+            let thisComment = {};
+            thisComment['id'] = key;
+            thisComment['display-name'] = value['display-name'];
+            thisComment['text'] = value['text'];
+            commentsList.push(thisComment);
+        }
+
+        res.status(200).json({
+            'status': 200,
+            'comments': commentsList
+        });
 
     }).catch(err => {
         errorResponse(err, req, res, '.json');

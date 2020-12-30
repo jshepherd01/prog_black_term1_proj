@@ -467,6 +467,7 @@ document.getElementById('update-nsfw').addEventListener('change', (e) => checkbo
 
 /* comment form */
 document.getElementById('drop-comment').addEventListener('click', (e) => dropClick(e, 'comment'));
+document.getElementById('comment-info').addEventListener('click', (e) => displayPopup('info-comment', nop));
 
 /*
     === unique handlers ===
@@ -686,7 +687,38 @@ frmUpdate.addEventListener('submit', (e) => {
             currentImage['edit-pass'] = pass;
             displayImage();
         });
+        resetForm('update');
     }, 'update', 'Update');
+});
+
+document.getElementById('frm-comment').addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    changeButtonStatus('comment-submit', 'btn-amb', 'Processing...', true);
+
+    const elements = e.currentTarget.elements;
+    let data = new FormData();
+    data.append('id', currentImage['id']);
+    if (currentImage['view-pass'] !== '') data.append('view-pass', currentImage['view-pass']);
+    if (elements['display-name'].value !== '') data.append('display-name', elements['display-name'].value);
+    if (elements['text'].value === '') {
+        changeButtonStatus('comment-submit', 'btn-red', 'Validation Error', true);
+        markInvalid('comment', ['text'], () => {
+            changeButtonStatus('comment-submit','btn-grn','Leave Comment', false);
+        });
+        return;
+    } else {
+        data.append('text', elements['text'].value);
+    }
+
+    makeRequest('/comment/upload', {
+        method: 'POST',
+        body: data
+    }, () => {
+        resetForm('comment');
+        // TODO
+        console.log('comment posted successfully');
+    }, 'comment', 'Leave Comment');
 });
 
 /* misc */

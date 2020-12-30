@@ -219,6 +219,22 @@
                 </div>
             </div>
         </div>
+        <div class="modal hide" tabindex="-1" role="dialog" id="info-comment" data-buttonclass="info-comment-btn">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body info-content">
+                        <button type="button" class="close info-comment-btn" data-return="close" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                        <p><strong>Display Name:</strong> the name you'd like to appear above your comment. Leave this blank to be listed as <strong>anonymous</strong>.</p>
+                        <p><strong>Comment Text:</strong> the text of the comment you'd like to leave. Offensive, misinformative or otherwise inappropriate comments will be removed, and may result in bans.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary btn-grn info-comment-btn" data-return="okay">Okay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class='container'>
             <div id='welcome-row' class='row row-top'>
                 <div class='col-md-12'>
@@ -405,7 +421,9 @@
                         <input type='submit' value='Update' id='update-submit' class="btn-grn">
                     </form>
                     <div id="display-comments-list">
-                        
+                        <div id="no-comments-placeholder" class="empty-comment">
+                            There are no comments here yet.
+                        </div>
                     </div>
                     <button class="drop-btn drop-btn-small" id="drop-comment">Leave a comment</button>
                     <form class="drop-frm" id="frm-comment">
