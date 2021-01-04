@@ -38,6 +38,35 @@ const genPass = () => {
     return btoa(String.fromCharCode.apply(null,buf)); // convert the values to base64 ([a-zA-Z0-9+/])
 };
 
+const htmlBreak = (aString) => {
+    /* converts all forms of newline in the string to <br> tags */
+
+    return aString.replace(/\r\n|\r|\n/g, '<br>');
+};
+
+const newCommentBlock = (displayName, commentText) => {
+    /* creates a new comment block with the requested display name and comment text */
+
+    let newHtml = `<div class="comment-outer">
+        <div class="comment-head">
+            <div class="comment-btns">
+                <button class="icon-btn" type="button">
+                    <i class="material-icons">arrow_downward</i>
+                </button>
+            </div>
+            <i class="material-icons">chat_bubble_outline</i>
+            ${displayName}
+        </div>
+        <div class="comment-body">
+            ${htmlBreak(commentText)}
+        </div>
+    </div>`;
+    let temp = document.createElement('template');
+    temp.innerHTML = newHtml;
+    temp.content.querySelector('.icon-btn').addEventListener('click', (e) => scrollToElement(e, 'drop-comment'));
+    return temp.content.firstChild;
+};
+
 /*
     === subroutines ===
 */
@@ -291,7 +320,6 @@ const getImage = (imageID, viewPass, cb, formName, buttonText, passName) => {
 const displayImage = () => {
     /* changes the image display to show the global currentImage */
     /* also resets the unlock and update forms, and the comments section */
-    // TODO comments section
 
     resetForm('unlock');
     resetForm('update');
@@ -299,14 +327,13 @@ const displayImage = () => {
     hideForm('update', !('edit-pass' in currentImage)); // hide 'update' if the image is locked
     closeForm('update', false);
 
-    const displayRow = document.getElementById('image-display-row');
     const displayImg = document.getElementById('display-image');
     let imageUrl = new URLSearchParams();
 
-    displayRow.classList.remove('hide');
-    /* don't scroll until the image is loaded */
-    displayImg.addEventListener('load', () => displayRow.scrollIntoView(true));
+    document.getElementById('image-display-row').classList.remove('hide');
 
+    /* don't scroll until the image is loaded */
+    displayImg.addEventListener('load', (e) => scrollToElement(e, 'image-display-row'));
     document.getElementById('display-title').innerText = currentImage['title'];
 
     imageUrl.append('id',currentImage['id']);
@@ -332,7 +359,32 @@ const displayImage = () => {
     document.getElementById('display-copyright').classList[
         currentImage['copyright'] === '' ? 'add' : 'remove'
     ]('hide');
-    document.getElementById('info-copyright-text').innerText = currentImage['copyright'];
+    document.getElementById('info-copyright-text').innerHTML = htmlBreak(currentImage['copyright']);
+
+    displayComments();
+};
+
+const displayComments = () => {
+    let commentsUrl = new URLSearchParams();
+    commentsUrl.append('id', currentImage['id']);
+    if (currentImage['priv']) commentsUrl.append('view-pass', currentImage['view-pass']);
+
+    makeRequest('/comment/list?' + commentsUrl.toString(), {method: 'GET'}, (resData) => {
+        const emptyComment = document.getElementById('no-comments-placeholder');
+        const commentsList = document.getElementById('display-comments-list');
+
+        if (resData['comments'].length > 0) {
+            emptyComment.classList.add('hide');
+            commentsList.innerHTML = '';
+
+            resData['comments'].forEach(commentData => {
+                commentsList.appendChild(newCommentBlock(commentData['display-name'], commentData['text']));
+            });
+        } else {
+            emptyComment.classList.remove('hide');
+            commentsList.innerHTML = '';
+        }
+    });
 };
 
 const unloadImage = () => {
@@ -385,6 +437,13 @@ const checkboxChangeClps = (e, clpsId) => {
     ]('hide');
 };
 
+/* navigation */
+const scrollToElement = (e, targetId) => {
+    /* handles clicks or other events that result in scrolling to another element */
+
+    document.getElementById(targetId).scrollIntoView(true);
+};
+
 /*
     === element references ===
 */
@@ -398,6 +457,9 @@ const frmUpdate = document.getElementById('frm-update');
 /*
     === attach event handlers ===
 */
+
+/* navigation */
+document.getElementById('nav-btn-home').addEventListener('click', (e) => scrollToElement(e, 'welcome-row'));
 
 /* upload form */
 document.getElementById('drop-upload').addEventListener('click', (e) => dropClick(e, 'upload'));
@@ -715,9 +777,8 @@ document.getElementById('frm-comment').addEventListener('submit', (e) => {
         method: 'POST',
         body: data
     }, () => {
+        displayComments();
         resetForm('comment');
-        // TODO
-        console.log('comment posted successfully');
     }, 'comment', 'Leave Comment');
 });
 

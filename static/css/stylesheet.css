@@ -6,13 +6,15 @@ body {
     padding-bottom: 15px;
 }
 
-.popup-outer {
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    z-index: 10;
-    top: 0;
-    left: 0;
+.nav {
+    position: fixed;
+    z-index: 2;
+    padding: 0.2em;
+    background-color: #1c1c1c;
+    border: 1px solid #363636;
+    border-top-width: 0;
+    border-left-width: 0;
+    border-radius: 0 0 8px 0;
 }
 
 .modal {
@@ -300,4 +302,40 @@ input[type="submit"]:hover:enabled, input[type="submit"]:focus, .btn:hover:enabl
 
 #display-permalink {
     font-size: 0.7em;
+}
+
+.comment-outer {
+    width: 100%;
+    padding: 0.7em 0.5em;
+    margin-bottom: 15px;
+    border: 1px solid #363636;
+    border-radius: 8px;
+    background-color: #1c1c1c;
+}
+
+.empty-comment {
+    text-align: center;
+}
+
+.empty-comment .material-icons {
+    font-size: 1.5em;
+}
+
+.comment-head {
+    border-bottom: 1px solid #363636;
+    font-size: 1.2em;
+    padding-bottom: 0.3em;
+    margin-bottom: 0.3em;
+}
+
+.comment-head>.material-icons {
+    font-size: 1.5em;
+}
+
+.comment-btns {
+    float: right;
+}
+
+.comment-head .material-icons {
+    vertical-align: top;
 }

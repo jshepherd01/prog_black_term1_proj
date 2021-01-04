@@ -279,6 +279,15 @@ const deleteRecord = (dbPath, uuid) => {
 };
 
 /*
+    data handling
+*/
+const sortByTimestamp = (unsortedArray) => {
+    unsortedArray.sort((a,b) => {
+        return a['timestamp'] - b['timestamp'];
+    });
+};
+
+/*
     server init
 */
 const app = express(http.createServer());
@@ -425,8 +434,10 @@ app.get('/image/list', (req, res) => {
             thisImage['author'] = value['author'];
             thisImage['copyright'] = value['copyright'];
             thisImage['nsfw'] = value['nsfw'];
+            thisImage['timestamp'] = value['timestamp'];
             imagesList.push(thisImage);
         }
+        sortByTimestamp(imagesList);
         res.status(200).json({
             'status': 200,
             'images': imagesList
@@ -551,6 +562,9 @@ app.post('/image/delete', upload.none(), (req, res) => {
     });
 });
 
+/*
+    comment actions
+*/
 app.post('/comment/upload', upload.none(), (req, res) => {
     /* adds a comment to an image */
 
@@ -625,14 +639,52 @@ app.get('/comment/list', (req, res) => {
             thisComment['id'] = key;
             thisComment['display-name'] = value['display-name'];
             thisComment['text'] = value['text'];
+            thisComment['timestamp'] = value['timestamp'];
             commentsList.push(thisComment);
         }
+        sortByTimestamp(commentsList);
 
         res.status(200).json({
             'status': 200,
             'comments': commentsList
         });
 
+    }).catch(err => {
+        errorResponse(err, req, res, '.json');
+    });
+});
+
+app.get('/comment/get', (req, res) => {
+    /* returns a comment by its ID */
+
+    let valResult, commentData;
+
+    validate(req.query, {
+        'id': ['string'],
+        'view-pass': ['string', 'optional']
+    }, null, {'string': ''}).then(ret => {
+        valResult = ret;
+
+        return getItemByID(dbCommentPath, valResult['id']);
+    }).then(data => {
+        commentData = data;
+
+        return getItemByID(dbImagePath, commentData['image-id']);
+    }).then(data => {
+        if (data['view-pass'] !== '') {
+            if (valResult['view-pass'] === '') {
+                throw new UserError('Image is private, no passcode sent', {'status': 401});
+            } else if (valResult['view-pass'] !== data['view-pass']) {
+                throw new UserError('Incorrect passcode', {'status': 403});
+            }
+        }
+
+        res.status(200).json({
+            'status': 200,
+            'image-id': commentData['image-id'],
+            'display-name': commentData['display-name'],
+            'text': commentData['text']
+        });
     }).catch(err => {
         errorResponse(err, req, res, '.json');
     });

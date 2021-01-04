@@ -17,6 +17,11 @@
         <link rel="stylesheet" href="css/stylesheet.css">
     </head>
     <body>
+        <div class="nav">
+            <button class="icon-btn" type="button" id="nav-btn-home">
+                <i class="material-icons">home</i>
+            </button>
+        </div>
         <div class="modal hide" tabindex="-1" role="dialog" id="server-down" data-buttonclass="server-down-btn">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
@@ -235,6 +240,7 @@
                 </div>
             </div>
         </div>
+        <div id="top"></div>
         <div class='container'>
             <div id='welcome-row' class='row row-top'>
                 <div class='col-md-12'>
@@ -420,10 +426,13 @@
                         </div>
                         <input type='submit' value='Update' id='update-submit' class="btn-grn">
                     </form>
+                    <div id="no-comments-placeholder" class="comment-outer empty-comment">
+                        <i class="material-icons">sentiment_very_dissatisfied</i>
+                        There are no comments here yet.
+                        <i class="material-icons">sentiment_very_dissatisfied</i>
+                    </div>
                     <div id="display-comments-list">
-                        <div id="no-comments-placeholder" class="empty-comment">
-                            There are no comments here yet.
-                        </div>
+                        
                     </div>
                     <button class="drop-btn drop-btn-small" id="drop-comment">Leave a comment</button>
                     <form class="drop-frm" id="frm-comment">
@@ -441,6 +450,7 @@
                 </div>
             </div>
         </div>
+        <div id="bottom"></div>
 
         <!-- JS -->
         <script src="js/main.js"></script>
