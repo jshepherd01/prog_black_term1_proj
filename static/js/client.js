@@ -313,6 +313,7 @@ const getImage = (imageID, viewPass, cb, formName, buttonText, passName) => {
         newImage['author'] = resData['author'];
         newImage['copyright'] = resData['copyright'];
         newImage['nsfw'] = resData['nsfw'];
+        newImage['timestamp'] = resData['timestamp'];
         cb(null, newImage);
     }, formName, buttonText, passName);
 };

@@ -362,7 +362,8 @@ app.get('/image/get', (req, res) => {
             'priv': (data['view-pass'] !== ''),
             'author': data['author'],
             'copyright': data['copyright'],
-            'nsfw': data['nsfw']
+            'nsfw': data['nsfw'],
+            'timestamp': data['timestamp']
         });
 
     }).catch(err => {
@@ -507,6 +508,7 @@ app.post('/image/update', upload.single('file'), (req, res) => {
             tempPath = `uploads/temp/${valResult['uri']}`;
             newPath = `uploads/${newUri}`;
             changes['uri'] = newUri;
+            changes['timestamp'] = Date.now();
         }
         if (valResult['title'] !== null) changes['title'] = valResult['title'];
         if (valResult['view-pass'] !== null) changes['view-pass'] = valResult['view-pass'];
@@ -683,7 +685,8 @@ app.get('/comment/get', (req, res) => {
             'status': 200,
             'image-id': commentData['image-id'],
             'display-name': commentData['display-name'],
-            'text': commentData['text']
+            'text': commentData['text'],
+            'timestamp': commentData['timestamp']
         });
     }).catch(err => {
         errorResponse(err, req, res, '.json');

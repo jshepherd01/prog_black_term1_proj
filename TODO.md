@@ -5,10 +5,7 @@
 # Back End
 
 - Call to go directly to viewing an image when using GET paramaters
-- Get comment by ID
 - Make all deletes recursive to remove dead pointers
-- Send timestamps with all gets and lists
-- Update image timestamp when image is replaced
 
 # Misc
 
