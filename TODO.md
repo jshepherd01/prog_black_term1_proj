@@ -1,6 +1,6 @@
 # Front End
 
-
+- Add timestamp update to update info modal
 
 # Back End
 

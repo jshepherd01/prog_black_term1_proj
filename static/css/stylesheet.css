@@ -290,6 +290,10 @@ input[type="submit"]:hover:enabled, input[type="submit"]:focus, .btn:hover:enabl
     background-color: #1c1c1c;
 }
 
+#display-time-ago {
+    font-size: 1em;
+}
+
 #display-image {
     display: block;
     max-width: 100%;
@@ -338,4 +342,8 @@ input[type="submit"]:hover:enabled, input[type="submit"]:focus, .btn:hover:enabl
 
 .comment-head .material-icons {
     vertical-align: top;
+}
+
+.comment-time-ago {
+    font-size: 0.7em;
 }

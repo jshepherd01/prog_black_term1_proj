@@ -44,7 +44,7 @@ const htmlBreak = (aString) => {
     return aString.replace(/\r\n|\r|\n/g, '<br>');
 };
 
-const newCommentBlock = (displayName, commentText) => {
+const newCommentBlock = (commentData) => {
     /* creates a new comment block with the requested display name and comment text */
 
     let newHtml = `<div class="comment-outer">
@@ -55,16 +55,44 @@ const newCommentBlock = (displayName, commentText) => {
                 </button>
             </div>
             <i class="material-icons">chat_bubble_outline</i>
-            ${displayName}
+            ${commentData['display-name']}
+            <span class="comment-time-ago">${timeAgo(commentData['timestamp'])}</span>
         </div>
         <div class="comment-body">
-            ${htmlBreak(commentText)}
+            ${htmlBreak(commentData['text'])}
         </div>
     </div>`;
     let temp = document.createElement('template');
     temp.innerHTML = newHtml;
     temp.content.querySelector('.icon-btn').addEventListener('click', (e) => scrollToElement(e, 'drop-comment'));
     return temp.content.firstChild;
+};
+
+const timeAgo = (timestamp) => {
+    /* converts a timestamp into a string e.g. '1 minute ago' or '3 hours ago' */
+
+    let seconds = Math.floor((Date.now() - timestamp) / 1000);
+    if (seconds <= 1) return 'Just now';
+    let formats = [
+        [60, 'seconds', 1], // max seconds, units/phrase, seconds per unit
+        [120, '1 minute ago', false],
+        [3600, 'minutes', 60],
+        [7200, '1 hour ago', false],
+        [86400, 'hours', 3600],
+        [172800, 'Yesterday', false],
+        [604800, 'days', 86400],
+        [1209600, 'Last week', false],
+        [2629800, 'weeks', 604800],
+        [5259600, 'Last month', false],
+        [31557600, 'months', 2629800],
+        [63115200, 'Last year', false],
+        [Infinity, 'years', 31557600]
+    ];
+    for (let format of formats) {
+        if (seconds < format[0]) {
+            return format[2] ? `${Math.floor(seconds/format[2])} ${format[1]} ago` : format[1];
+        }
+    }
 };
 
 /*
@@ -335,7 +363,9 @@ const displayImage = () => {
 
     /* don't scroll until the image is loaded */
     displayImg.addEventListener('load', (e) => scrollToElement(e, 'image-display-row'));
-    document.getElementById('display-title').innerText = currentImage['title'];
+
+    document.getElementById('display-title').innerHTML = currentImage['title'];
+    document.getElementById('display-time-ago').innerText = timeAgo(currentImage['timestamp']);
 
     imageUrl.append('id',currentImage['id']);
     if (currentImage['priv']) {
@@ -379,7 +409,7 @@ const displayComments = () => {
             commentsList.innerHTML = '';
 
             resData['comments'].forEach(commentData => {
-                commentsList.appendChild(newCommentBlock(commentData['display-name'], commentData['text']));
+                commentsList.appendChild(newCommentBlock(commentData));
             });
         } else {
             emptyComment.classList.remove('hide');
