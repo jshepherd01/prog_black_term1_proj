@@ -239,6 +239,12 @@ const markInvalid = (formName, inputs, cb) => {
 
 /* fetch actions */
 const makeRequest = (url, params, cb, formName, buttonText, passName) => {
+    /* make fetch request to url, passing params, and execute cb when successful */
+
+    if ('timestamp' in currentImage) {
+        document.getElementById('display-time-ago').innerText = timeAgo(currentImage['timestamp']);
+    }
+    
     fetch(url, params).catch(err => {
         throw new ConnectionError('The server did not respond.');
     }).then(resp => {
@@ -396,6 +402,8 @@ const displayImage = () => {
 };
 
 const displayComments = () => {
+    /* gets and displays all comments associated with the currentImage */
+
     let commentsUrl = new URLSearchParams();
     commentsUrl.append('id', currentImage['id']);
     if (currentImage['priv']) commentsUrl.append('view-pass', currentImage['view-pass']);

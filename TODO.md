@@ -1,9 +1,12 @@
 # Front End
 
-- update timeAgos more often
+- Run through again for comments etc.
+- Option to bookmark an image to put its ID and view pass in local storage
+- Open bookmarked image automatically when loading page
 
 # Back End
 
+- Run through again for comments etc.
 - Call to go directly to viewing an image when using GET paramaters
 
 # Misc
