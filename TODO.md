@@ -1,8 +1,7 @@
 # Front End
 
 - Run through again for comments etc.
-- Option to bookmark an image to put its ID and view pass in local storage
-- Open bookmarked image automatically when loading page
+- Update bookmark when the bookmarked image is changed by the update form
 
 # Back End
 

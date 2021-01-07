@@ -20,6 +20,9 @@
         <div class="nav">
             <button class="icon-btn" type="button" id="nav-btn-home">
                 <i class="material-icons">home</i>
+            </button><br>
+            <button class="icon-btn" type="button" id="nav-btn-bookmark">
+                <i class="material-icons">bookmark_border</i>
             </button>
         </div>
         <div class="modal hide" tabindex="-1" role="dialog" id="server-down" data-buttonclass="server-down-btn">
@@ -156,6 +159,26 @@
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-primary btn-grn info-copyright-btn" data-return="okay">Okay</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal hide" tabindex="-1" role="dialog" id="set-bookmark" data-buttonclass="set-bookmark-btn">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-body info-content">
+                        <button type="button" class="close set-bookmark-btn" data-return="close" aria-label="Close">
+                            <i class="material-icons">close</i>
+                        </button>
+                        <p>When viewing an image, you can <strong>bookmark</strong> it. A bookmarked image will display automatically when you come to this page.</p>
+                        <p>You can only have one bookmarked image at a time.</p>
+                        <p id="no-bookmarks-text">You currently have no bookmarks.</p>
+                        <p id="one-bookmark-text" class="hide">Your bookmark is currently <strong id="bookmark-title"></strong>.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="bookmark-mark" class="btn btn-primary btn-grn set-bookmark-btn hide" data-return="mark">Bookmark this image</button>
+                        <button type="button" id="bookmark-clear" class="btn btn-primary btn-grn set-bookmark-btn hide" data-return="clear">Clear bookmarks</button>
+                        <button type="button" class="btn btn-secondary btn-amb set-bookmark-btn" data-return="close">Close</button>
                     </div>
                 </div>
             </div>

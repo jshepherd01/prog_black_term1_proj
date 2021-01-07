@@ -244,7 +244,7 @@ const makeRequest = (url, params, cb, formName, buttonText, passName) => {
     if ('timestamp' in currentImage) {
         document.getElementById('display-time-ago').innerText = timeAgo(currentImage['timestamp']);
     }
-    
+
     fetch(url, params).catch(err => {
         throw new ConnectionError('The server did not respond.');
     }).then(resp => {
@@ -361,6 +361,7 @@ const displayImage = () => {
     hideForm('unlock', 'edit-pass' in currentImage); // hide 'unlock' if the image is unlocked
     hideForm('update', !('edit-pass' in currentImage)); // hide 'update' if the image is locked
     closeForm('update', false);
+    bookmarkPopupUpdate();
 
     const displayImg = document.getElementById('display-image');
     let imageUrl = new URLSearchParams();
@@ -432,8 +433,48 @@ const unloadImage = () => {
     currentImage = {};
     resetForm('unlock');
     resetForm('update');
+    bookmarkPopupUpdate();
     document.getElementById('image-display-row').classList.add('hide');
     document.getElementById('display-image').setAttribute('src','data:,');
+};
+
+/* bookmark actions */
+const bookmarkClick = (err, ret) => {
+    /* handles user input related to bookmarks */
+    switch (ret) {
+        case 'mark':
+            bookmarkSet(currentImage['id'], currentImage['title'], currentImage['view-pass']);
+            break;
+        
+        case 'clear':
+            bookmarkSet();
+            break;
+    }
+};
+
+const bookmarkSet = (id, title, viewPass) => {
+    localStorage.setItem('bookmark-id', id ? id : '');
+    localStorage.setItem('bookmark-title', title ? title : '');
+    localStorage.setItem('bookmark-view-pass', viewPass ? viewPass : '');
+    bookmarkPopupUpdate();
+};
+
+const bookmarkPopupUpdate = () => {
+    /* updates the bookmark modal according to the localStorage bookmark and whether an image is being displayed */
+
+    let isBookmark = !!(localStorage.getItem('bookmark-id'));
+    document.getElementById('no-bookmarks-text').classList[isBookmark ? 'add':'remove']('hide');
+    document.getElementById('one-bookmark-text').classList[isBookmark ? 'remove':'add']('hide');
+    document.getElementById('bookmark-clear').classList[isBookmark ? 'remove':'add']('hide');
+    document.getElementById('bookmark-title').innerText = localStorage.getItem('bookmark-title');
+
+    document.getElementById('nav-btn-bookmark').firstElementChild.innerText = isBookmark ? 'bookmark':'bookmark_border';
+
+    if ('id' in currentImage && currentImage['id'] !== localStorage.getItem('bookmark-id')) {
+        document.getElementById('bookmark-mark').classList.remove('hide');
+    } else {
+        document.getElementById('bookmark-mark').classList.add('hide');
+    }
 };
 
 /*
@@ -499,6 +540,7 @@ const frmUpdate = document.getElementById('frm-update');
 
 /* navigation */
 document.getElementById('nav-btn-home').addEventListener('click', (e) => scrollToElement(e, 'welcome-row'));
+document.getElementById('nav-btn-bookmark').addEventListener('click', (e) => displayPopup('set-bookmark', bookmarkClick));
 
 /* upload form */
 document.getElementById('drop-upload').addEventListener('click', (e) => dropClick(e, 'upload'));
@@ -865,3 +907,14 @@ document.getElementById('update-delete').addEventListener('click', (e) => {
 */
 populateField('upload-edit-pass', genPass());
 populateField('upload-view-pass', genPass());
+
+if (localStorage.getItem('bookmark-id')) {
+    /* if there's a bookmark, set the bookmark popup and display image accordingly */
+
+    bookmarkPopupUpdate();
+    populateField('view-id', localStorage.getItem('bookmark-id'));
+    if (localStorage.getItem('bookmark-view-pass')) {
+        populateField('view-view-pass', localStorage.getItem('bookmark-view-pass'));
+    }
+    document.getElementById('frm-view').dispatchEvent(new Event('submit'));
+}
