@@ -1,7 +1,6 @@
 # Front End
 
 - Run through again for comments etc.
-- Update bookmark when the bookmarked image is changed by the update form
 
 # Back End
 

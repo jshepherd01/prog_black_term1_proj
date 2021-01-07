@@ -442,6 +442,10 @@ const unloadImage = () => {
 const bookmarkClick = (err, ret) => {
     /* handles user input related to bookmarks */
     switch (ret) {
+        case 'goto':
+            bookmarkGoTo();
+            break;
+
         case 'mark':
             bookmarkSet(currentImage['id'], currentImage['title'], currentImage['view-pass']);
             break;
@@ -452,11 +456,18 @@ const bookmarkClick = (err, ret) => {
     }
 };
 
-const bookmarkSet = (id, title, viewPass) => {
+const bookmarkSet = (id='', title='', viewPass='') => {
     localStorage.setItem('bookmark-id', id ? id : '');
     localStorage.setItem('bookmark-title', title ? title : '');
     localStorage.setItem('bookmark-view-pass', viewPass ? viewPass : '');
     bookmarkPopupUpdate();
+};
+
+const bookmarkGoTo = () => {
+    closeForm('view', false);
+    populateField('view-id', localStorage.getItem('bookmark-id'));
+    populateField('view-view-pass', localStorage.getItem('bookmark-view-pass'));
+    document.getElementById('frm-view').dispatchEvent(new Event('submit'));
 };
 
 const bookmarkPopupUpdate = () => {
@@ -465,6 +476,7 @@ const bookmarkPopupUpdate = () => {
     let isBookmark = !!(localStorage.getItem('bookmark-id'));
     document.getElementById('no-bookmarks-text').classList[isBookmark ? 'add':'remove']('hide');
     document.getElementById('one-bookmark-text').classList[isBookmark ? 'remove':'add']('hide');
+    document.getElementById('bookmark-goto').classList[isBookmark ? 'remove':'add']('hide');
     document.getElementById('bookmark-clear').classList[isBookmark ? 'remove':'add']('hide');
     document.getElementById('bookmark-title').innerText = localStorage.getItem('bookmark-title');
 
@@ -716,6 +728,11 @@ document.getElementById('frm-view').addEventListener('submit', (e) => {
     }
 
     getImage(elements['id'].value, elements['view-pass'].value, (err, imageData) => { // get the image data
+        if (imageData['id'] === localStorage.getItem('bookmark-id')) {
+            /* update bookmark if needed */
+            localStorage.setItem('bookmark-view-pass', imageData['view-pass']);
+        }
+
         if (imageData['nsfw']) {
             /* confirm that the user wants to see an NSFW image */
             displayPopup('nsfw-view', (err, ret) => {
@@ -828,6 +845,11 @@ frmUpdate.addEventListener('submit', (e) => {
             let pass = currentImage['edit-pass'];
             currentImage = imageData;
             currentImage['edit-pass'] = pass;
+
+            if (currentImage['id'] === localStorage.getItem('bookmark-id')) {
+                bookmarkSet(currentImage['id'], currentImage['title'], currentImage['view-pass']);
+            }
+
             displayImage();
         });
         resetForm('update');
@@ -912,9 +934,5 @@ if (localStorage.getItem('bookmark-id')) {
     /* if there's a bookmark, set the bookmark popup and display image accordingly */
 
     bookmarkPopupUpdate();
-    populateField('view-id', localStorage.getItem('bookmark-id'));
-    if (localStorage.getItem('bookmark-view-pass')) {
-        populateField('view-view-pass', localStorage.getItem('bookmark-view-pass'));
-    }
-    document.getElementById('frm-view').dispatchEvent(new Event('submit'));
+    bookmarkGoTo();
 }
