@@ -175,12 +175,16 @@ const getItemByID = (dbPath, uuid) => {
     return new Promise((resolve, reject) => {
         fs.readFile(dbPath, (err, data) => {
             if (err) return reject(err);
-            let jsonData = JSON.parse(data);
-            if (uuid in jsonData) return resolve(jsonData[uuid]);
-            return reject(new UserError(
-                'UUID not found',
-                {'status': 404}
-            ));
+            try {
+                let jsonData = JSON.parse(data);
+                if (uuid in jsonData) return resolve(jsonData[uuid]);
+                return reject(new UserError(
+                    'UUID not found',
+                    {'status': 404}
+                ));
+            } catch (err) {
+                return reject(err);
+            }
         });
     });
 };
@@ -191,31 +195,35 @@ const getItemsByField = (dbPath, params) => {
     return new Promise((resolve, reject) => {
         fs.readFile(dbPath, (err, data) => {
             if (err) return reject(err);
-            let jsonData = JSON.parse(data);
-            let matches = {};
-            /* iterate over the database, then the parameters */
-            for (let [dataKey, dataVal] of Object.entries(jsonData)) {
-                let match = true;
-                for (let [paramKey, paramVal] of Object.entries(params)) {
-                    if (!(paramKey in dataVal)) {
-                        /* first time datum fails a parameter, move onto the next one */
-                        match = false;
-                        break;
-                    } else if (paramVal instanceof RegExp) {
-                        if (!paramVal.test(dataVal[paramKey])) {
+            try {
+                let jsonData = JSON.parse(data);
+                let matches = {};
+                /* iterate over the database, then the parameters */
+                for (let [dataKey, dataVal] of Object.entries(jsonData)) {
+                    let match = true;
+                    for (let [paramKey, paramVal] of Object.entries(params)) {
+                        if (!(paramKey in dataVal)) {
+                            /* first time datum fails a parameter, move onto the next one */
+                            match = false;
+                            break;
+                        } else if (paramVal instanceof RegExp) {
+                            if (!paramVal.test(dataVal[paramKey])) {
+                                match = false;
+                                break;
+                            }
+                        } else if (dataVal[paramKey] !== paramVal) {
                             match = false;
                             break;
                         }
-                    } else if (dataVal[paramKey] !== paramVal) {
-                        match = false;
-                        break;
+                    }
+                    if (match) {
+                        matches[dataKey] = dataVal;
                     }
                 }
-                if (match) {
-                    matches[dataKey] = dataVal;
-                }
+                return resolve(matches);
+            } catch (err) {
+                return reject(err);
             }
-            return resolve(matches);
         });
     });
 };
@@ -225,13 +233,17 @@ const createRecord = (dbPath, uuid, record) => {
     return new Promise((resolve, reject) => {
         fs.readFile(dbPath, (err, data) => {
             if (err) return reject(err);
-            let jsonData = JSON.parse(data);
-            if (uuid in jsonData) return reject(new UserError('UUID is already present', {'status': 500}));
-            jsonData[uuid] = record;
-            fs.writeFile(dbPath, JSON.stringify(jsonData), (err) => {
-                if (err) return reject(err);
-                return resolve();
-            });
+            try {
+                let jsonData = JSON.parse(data);
+                if (uuid in jsonData) return reject(new UserError('UUID is already present', {'status': 500}));
+                jsonData[uuid] = record;
+                fs.writeFile(dbPath, JSON.stringify(jsonData), (err) => {
+                    if (err) return reject(err);
+                    return resolve();
+                });
+            } catch (err) {
+                return reject(err);
+            }
         });
     });
 };
@@ -242,38 +254,63 @@ const updateRecord = (dbPath, uuid, changes) => {
     return new Promise((resolve, reject) => {
         fs.readFile(dbPath, (err, data) => {
             if (err) return reject(err);
-            let jsonData = JSON.parse(data);
-            if (!(uuid in jsonData)) return reject(new UserError('UUID not found', {'status': 404}));
-            let updatedRecord = jsonData[uuid];
-            for (let [key, value] of Object.entries(changes)) {
-                if (key in updatedRecord) {
-                    updatedRecord[key] = value;
-                } else {
-                    return reject(new Error(`No ${key} item in record`));
+            try {
+                let jsonData = JSON.parse(data);
+                if (!(uuid in jsonData)) return reject(new UserError('UUID not found', {'status': 404}));
+                let updatedRecord = jsonData[uuid];
+                for (let [key, value] of Object.entries(changes)) {
+                    if (key in updatedRecord) {
+                        updatedRecord[key] = value;
+                    } else {
+                        return reject(new Error(`No ${key} item in record`));
+                    }
                 }
+                jsonData[uuid] = updatedRecord;
+                fs.writeFile(dbPath, JSON.stringify(jsonData), (err) => {
+                    if (err) return reject(err);
+                    return resolve();
+                });
+            } catch (err) {
+                return reject();
             }
-            jsonData[uuid] = updatedRecord;
-            fs.writeFile(dbPath, JSON.stringify(jsonData), (err) => {
-                if (err) return reject(err);
-                return resolve();
-            });
         });
     });
 };
 
-const deleteRecord = (dbPath, uuid) => {
-    /* completely remove the record at uuid */
+const deleteRecord = (dbPath, uuid, recursive=true) => {
+    /* completely remove the record at uuid, if recursive also delete records referencing it */
 
     return new Promise((resolve, reject) => {
         fs.readFile(dbPath, (err, data) => {
             if (err) return reject(err);
-            let jsonData = JSON.parse(data);
-            if (!(uuid in jsonData)) return reject(new UserError('UUID not found', {'status': 404}));
-            if (!(delete jsonData[uuid])) return reject(new Error('Could not delete record'));
-            fs.writeFile(dbPath, JSON.stringify(jsonData), (err) => {
-                if (err) return reject(err);
-                return resolve();
-            });
+            try {
+                let jsonData = JSON.parse(data);
+                if (!(uuid in jsonData)) return reject(new UserError('UUID not found', {'status': 404}));
+                if (!(delete jsonData[uuid])) return reject(new Error('Could not delete record'));
+                fs.writeFile(dbPath, JSON.stringify(jsonData), (err) => {
+                    if (err) return reject(err);
+                    resolve();
+                    /* if the next part fails, it doesn't make much difference to the user */
+                    if (recursive) {
+                        switch (dbPath) {
+                            case dbImagePath:
+                                getItemsByField(dbCommentPath, {'image-id': uuid}).then(data => {
+                                    let idList = Object.keys(data);
+                                    let delNext = (index) => {
+                                        if (index === idList.length) return;
+                                        deleteRecord(dbCommentPath, idList[index]).then(() => {
+                                            delNext(index+1);
+                                        });
+                                    };
+                                    delNext(0);
+                                });
+                                break;
+                        }
+                    }
+                });
+            } catch (err) {
+                return reject(err);
+            }
         });
     });
 };

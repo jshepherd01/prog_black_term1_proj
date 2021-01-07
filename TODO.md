@@ -1,11 +1,10 @@
 # Front End
 
-
+- update timeAgos more often
 
 # Back End
 
 - Call to go directly to viewing an image when using GET paramaters
-- Make all deletes recursive to remove dead pointers
 
 # Misc
 
