@@ -30,26 +30,30 @@ class UserError extends Error {
 }
 
 const errorResponse = (err, req, res, restype) => {
-    /* Handles error responses to every call */
+    /* Handles error responses to every call
+    err: the error to handle
+    req: the request object to respond to
+    res: the response object to write to
+    restype: a file extension-like string indicating the mimetype of the response */
 
-    let status = 500;
-    let details = {'status': 500};
-    if (err.name === 'UserError') {
-        status = err.status;
-        details = err.details;
-    }
+    let status = err.name === 'UserError' ? err.status : 500;
+    let details = err.name === 'UserError' ? err.details : {'status': 500};
 
     if (req.file) fs.unlink(req.file.path, nop);
+
     res.status(status);
     res.contentType(mime.contentType(restype));
     switch (restype) {
-        /* body depending on expected mime type */
         case '.png':
             fs.createReadStream(`error/image/${status}.png`).pipe(res);
             break;
 
         case '.json':
             res.json(details);
+            break;
+        
+        case '.html':
+            fs.createReadStream(`error/${status}.html`).pipe(res);
             break;
 
         default:
@@ -69,6 +73,7 @@ const uploadStorage = multer.diskStorage({
         cb(null, 'uploads/temp/');
     },
     filename: (req, file, cb) => {
+        /* each image is assigned a uuid, and given an appropriate extension */
         let uid = uuidv4();
         let ext = mime.extension(file.mimetype);
         cb(null, `${uid}.${ext}`);
@@ -82,13 +87,20 @@ const upload = multer({
 /*
     validation
 */
-const validate = (body, rules, file, defaults) => {
-    /* validate a request body according to some rules, returns validated object or throws error */
+const validate = (body, rules, file=null, defaults={}) => {
+    /* validate a request body according to some rules
+    body: the body object to validate
+    rules: the rules to validate the object against, as field: [type, 'optional']
+    file (optional): a file object to validate
+    defaults (optional): required if any fields are optional, object of default values by type
+    return: a promise object that resolves if the body and file are valid and rejects otherwise
+        passes the validated body object to resolve() */
 
     return new Promise((resolve, reject) => {
         let newEntry = {};
         let invalid = [];
         if ('file' in rules) {
+            /* validation on the file */
             if (file) {
                 if (rules['file'].includes(file.mimetype.split('/')[0])) {
                     newEntry['uri'] = file.filename;
@@ -170,7 +182,11 @@ const validate = (body, rules, file, defaults) => {
     database actions (heh, "database", lol)
 */
 const getItemByID = (dbPath, uuid) => {
-    /* get the item at uuid from the json file at dbPath */
+    /* get the item at uuid from the json file at dbPath
+    dbPath: the path to the database file, preferably from a global const
+    uuid: the ID of the item to retrieve
+    return: a promise object that resolves if the item is found, and rejects otherwise,
+        passes the retrieved item to resolve() */
 
     return new Promise((resolve, reject) => {
         fs.readFile(dbPath, (err, data) => {
@@ -190,7 +206,11 @@ const getItemByID = (dbPath, uuid) => {
 };
 
 const getItemsByField = (dbPath, params) => {
-    /* get all items from the file at dbPath that match params */
+    /* get all items from the file at dbPath that match params
+    dbPath: the path to the databse file
+    params: an object of field: value, where value can be either a literal or a regex, to match against
+    returns a promise object that resolves when no errors are encountered,
+        passes an object to resolve() that is a subset of the database which matches params */
 
     return new Promise((resolve, reject) => {
         fs.readFile(dbPath, (err, data) => {
@@ -229,7 +249,11 @@ const getItemsByField = (dbPath, params) => {
 };
 
 const createRecord = (dbPath, uuid, record) => {
-    /* insert record into the json file at dbPath at the key uuid */
+    /* insert record into the json file at dbPath at the key uuid
+    dbPath: the path to the database file
+    uuid: the ID to create the record at
+    record: the record to insert into the databse
+    returns: a promise object that resolves if the record was inserted successfully */
     return new Promise((resolve, reject) => {
         fs.readFile(dbPath, (err, data) => {
             if (err) return reject(err);
@@ -249,7 +273,11 @@ const createRecord = (dbPath, uuid, record) => {
 };
 
 const updateRecord = (dbPath, uuid, changes) => {
-    /* change the record at uuid to match the new values in changes */
+    /* change the record at uuid to match the new values in changes
+    dbPath: the path to the database file
+    uuid: the ID of the record to update
+    changes: an object containing the changes to be made to the record, as key: new value
+    returns a promise object that resolves if the record was updated successfully */
 
     return new Promise((resolve, reject) => {
         fs.readFile(dbPath, (err, data) => {
@@ -278,7 +306,12 @@ const updateRecord = (dbPath, uuid, changes) => {
 };
 
 const deleteRecord = (dbPath, uuid, recursive=true) => {
-    /* completely remove the record at uuid, if recursive also delete records referencing it */
+    /* completely remove the record at uuid, if recursive also delete records referencing it
+    dbPath: the path to the database
+    uuid: the ID of the record to delete
+    recursive (optional): whether or not to also delete records referencing the deleted record
+    returns: a promise object that resolves if the record was successfully deleted
+        recursive deletes do not affect whether the promise resolves */
 
     return new Promise((resolve, reject) => {
         fs.readFile(dbPath, (err, data) => {
@@ -319,6 +352,9 @@ const deleteRecord = (dbPath, uuid, recursive=true) => {
     data handling
 */
 const sortByTimestamp = (unsortedArray) => {
+    /* sorts an array of objects by their timestamps, in ascending order, in-place
+    unsortedArray: the array to sort */
+
     unsortedArray.sort((a,b) => {
         return a['timestamp'] - b['timestamp'];
     });
@@ -331,7 +367,7 @@ const app = express(http.createServer());
 app.use(express.static('static/'));
 
 /*
-    image actions
+    === image actions ===
 */
 app.post('/image/upload', upload.single('file'), (req, res) => {
     /* upload an image to the server */
@@ -602,7 +638,7 @@ app.post('/image/delete', upload.none(), (req, res) => {
 });
 
 /*
-    comment actions
+    === comment actions ===
 */
 app.post('/comment/upload', upload.none(), (req, res) => {
     /* adds a comment to an image */

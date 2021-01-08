@@ -1,12 +1,9 @@
 # Back End
 
-- Run through again for comments etc.
+- Jest testing
+- Clean up after testing
+- Document API
 
 # Misc
 
-- HTML error pages
-- Jest testing - work out how to test file upload
-- Clean up after testing: database file(s), uploads and uploads/temp folders
-- API documentation
 - Demonstration video (ugh)
-- Check HTML standards (https://validator.w3.org/nu/#file)
