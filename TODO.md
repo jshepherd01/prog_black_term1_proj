@@ -5,7 +5,6 @@
 # Back End
 
 - Run through again for comments etc.
-- Call to go directly to viewing an image when using GET paramaters
 
 # Misc
 
