@@ -31,21 +31,26 @@ let currentImage = {};
 */
 
 const genPass = () => {
-    /* generate a cryptographically random passcode */
+    /* generate a cryptographically random passcode
+    return: a 24-character random passcode [a-zA-Z+/] */
 
-    let buf = new Uint8Array(18); // get 18 random numerical values
+    let buf = new Uint8Array(18);
     window.crypto.getRandomValues(buf);
-    return btoa(String.fromCharCode.apply(null,buf)); // convert the values to base64 ([a-zA-Z0-9+/])
+    return btoa(String.fromCharCode.apply(null,buf));
 };
 
 const htmlBreak = (aString) => {
-    /* converts all forms of newline in the string to <br> tags */
+    /* converts all forms of newline in the string to <br> tags
+    aString: the string to convert
+    return: a converted string */
 
     return aString.replace(/\r\n|\r|\n/g, '<br>');
 };
 
 const newCommentBlock = (commentData) => {
-    /* creates a new comment block with the requested display name and comment text */
+    /* creates a new comment element from the comment data
+    commentData: an object containing a timestamp, display-name, and text, such as is returned by the API
+    return: a HTML element representing the comment */
 
     let newHtml = `<div class="comment-outer">
         <div class="comment-head">
@@ -69,12 +74,16 @@ const newCommentBlock = (commentData) => {
 };
 
 const timeAgo = (timestamp) => {
-    /* converts a timestamp into a string e.g. '1 minute ago' or '3 hours ago' */
+    /* converts a timestamp into a string e.g. '1 minute ago' or '3 hours ago'
+    timestamp: the timestamp to convert
+    return: a string representing the time since timestamp */
 
     let seconds = Math.floor((Date.now() - timestamp) / 1000);
     if (seconds <= 1) return 'Just now';
     let formats = [
-        [60, 'seconds', 1], // max seconds, units/phrase, seconds per unit
+        /* max seconds, units, seconds/unit */
+        /* or max seconds, return value, false */
+        [60, 'seconds', 1],
         [120, '1 minute ago', false],
         [3600, 'minutes', 60],
         [7200, '1 hour ago', false],
@@ -104,7 +113,9 @@ const nop = ()=>{};
 
 /* form actions */
 const hideForm = (formName, hide=true) => {
-    /* hides (default) or shows a form */
+    /* hides (default) or shows a form
+    formName: the name of the form to hide
+    hide (optional): true (default) to hide the form, false to show it */
 
     const func = hide ? 'add' : 'remove';
     document.getElementById('frm-'+formName).classList[func]('hide');
@@ -112,7 +123,9 @@ const hideForm = (formName, hide=true) => {
 };
 
 const closeForm = (formName, close=true) => {
-    /* closes (default) or opens a form */
+    /* closes (default) or opens a form
+    formName: the name of the form to close
+    close (optional): true (default) to close the form, false to open it */
 
     const func = close ? 'remove' : 'add';
     document.getElementById('frm-'+formName).classList[func]('drop-frm-open');
@@ -120,7 +133,8 @@ const closeForm = (formName, close=true) => {
 };
 
 const resetForm = (formName) => {
-    /* resets a form to its default values, and closes it */
+    /* resets a form to its default values, and closes it
+    formName: the form to reset */
 
     const form = document.getElementById('frm-'+formName);
     const inputEvent = new Event('input');
@@ -139,7 +153,9 @@ const resetForm = (formName) => {
 
 /* field actions */
 const populateField = (fieldId, newVal) => {
-    /* sets a fields value and triggers its input and change events */
+    /* sets a fields value and triggers its input and change events
+    fieldId: the ID of the field
+    newVal: the value to set the field to */
 
     const field = document.getElementById(fieldId);
     field.value = newVal;
@@ -148,16 +164,19 @@ const populateField = (fieldId, newVal) => {
 };
 
 const copyField = (fieldId) => {
-    /* copies the contents of a field to the clipboard */
+    /* copies the contents of a field to the clipboard
+    fieldId: the field (or other element) to copy */
 
     const field = document.getElementById(fieldId);
     if (field.tagName === 'INPUT') {
-        if (field.value === '') field.value = field.placeholder; // copy placeholder if no value
-        field.select(); // only works on <input>s
-        field.setSelectionRange(0,999); // mobile compatibility
+        /* if the field has no value, copy the placeholder instead */
+        if (field.value === '') field.value = field.placeholder;
+        field.select();
+        field.setSelectionRange(0,9999);
         document.execCommand('copy');
         if (field.value === field.placeholder) field.value = '';
     } else {
+        /* the above only works on <input>s */
         let range = document.createRange();
         range.selectNode(field);
         window.getSelection().removeAllRanges();
@@ -167,7 +186,11 @@ const copyField = (fieldId) => {
 };
 
 const changeButtonStatus = (buttonId, color, msg, disable) => {
-    /* changes the state of a submit button (which is actually an <input> but who's counting) */
+    /* changes the state of a submit button (which is actually an <input> but who's counting)
+    buttonId: the ID of the submit button
+    color: the color class to add to the button
+    msg: the text to display in the button
+    disable: whether or not to disable the button */
 
     const button = document.getElementById(buttonId);
     if (!button.classList.contains(color)) {
@@ -180,7 +203,11 @@ const changeButtonStatus = (buttonId, color, msg, disable) => {
 
 /* error handling (and some other stuff) */
 const displayPopup = (popupId, cb) => {
-    /* displays the specified modal, executes cb with a return value when it closes */
+    /* displays the specified modal, executes cb with a return value when it closes
+    popupId: the ID of the modal
+    cb: function to execute when the modal is closed, passes two values:
+        Error or null: the error that occured during execution
+        string: a string representation of the button the user clicked to close the modal */
     
     const modal = document.getElementById(popupId);
     let buttonList = Array.from(
@@ -198,7 +225,10 @@ const displayPopup = (popupId, cb) => {
 };
 
 const markInvalid = (formName, inputs, cb) => {
-    /* marks certain inputs of a form as invalid */
+    /* marks certain inputs of a form as invalid
+    formName: the name of the form to mark
+    inputs: a list of inputs by name to mark
+    cb: function to execute once all marked inputs have been changed by the user */
 
     /* error if any input isn't in the form */
     const elements = document.getElementById('frm-'+formName).elements;
@@ -238,8 +268,15 @@ const markInvalid = (formName, inputs, cb) => {
 };
 
 /* fetch actions */
-const makeRequest = (url, params, cb, formName, buttonText, passName) => {
-    /* make fetch request to url, passing params, and execute cb when successful */
+const makeRequest = (url, params, cb, formName=false, buttonText='', passName='') => {
+    /* make fetch request to url, passing params, and execute cb when successful
+    url: the url to send the request to
+    params: the object to pass to the fetch request, including at least method and possibly body
+    cb: function to execute when a 200 response is returned, passes one value:
+        Object: an object representation of the JSON data that was returned by the server
+    formName (optional): the name of the form that made the request
+    buttonText (optional): the text that should be put in the form's submit button when the request succeeds
+    passName (optional): the name of the field in the form that should be marked invalid on a 401/403 response */
 
     if ('timestamp' in currentImage) {
         document.getElementById('display-time-ago').innerText = timeAgo(currentImage['timestamp']);
@@ -329,8 +366,16 @@ const makeRequest = (url, params, cb, formName, buttonText, passName) => {
 };
 
 /* image actions */
-const getImage = (imageID, viewPass, cb, formName, buttonText, passName) => {
-    /* get an image from the server, execute callback once it's there */
+const getImage = (imageID, viewPass, cb, formName=false, buttonText='', passName='') => {
+    /* get an image from the server, execute callback once it's there
+    imageID: id of the image to retrieve
+    viewPass: view-pass of the image to retrieve
+    cb: function to execute when the image is retrieved, passes two values:
+        Error or null: the error that occured, if one did
+        object: an object representing the image data returned by the server
+    formName (optional): the name of the form associated with the request
+    buttonText (optional): the text that should be put in the form's submit button when the request succeeds
+    passName (optional): the name of the field in the form that should be marked invalid on a 401/403 response */
 
     let reqData = new URLSearchParams();
     reqData.append('id', imageID);
@@ -353,8 +398,8 @@ const getImage = (imageID, viewPass, cb, formName, buttonText, passName) => {
 };
 
 const displayImage = () => {
-    /* changes the image display to show the global currentImage */
-    /* also resets the unlock and update forms, and the comments section */
+    /* changes the image display to show the global currentImage
+    also resets the unlock and update forms, and the comments section */
 
     resetForm('unlock');
     resetForm('update');
@@ -440,7 +485,9 @@ const unloadImage = () => {
 
 /* bookmark actions */
 const bookmarkClick = (err, ret) => {
-    /* handles user input related to bookmarks */
+    /* handles user input related to bookmarks
+    err: the error returned, if one was
+    ret: a string representing the user's choice of action */
     switch (ret) {
         case 'goto':
             bookmarkGoTo();
@@ -457,6 +504,11 @@ const bookmarkClick = (err, ret) => {
 };
 
 const bookmarkSet = (id='', title='', viewPass='') => {
+    /* sets a bookmark with the specified values. If empty, clears the boookmark
+    id (optional): the image ID to be bookmarked
+    title (optional): the title of the image to be bookmarked
+    viewPass (optional): the view-pass of the image to be bookmarked */
+
     localStorage.setItem('bookmark-id', id ? id : '');
     localStorage.setItem('bookmark-title', title ? title : '');
     localStorage.setItem('bookmark-view-pass', viewPass ? viewPass : '');
@@ -464,6 +516,8 @@ const bookmarkSet = (id='', title='', viewPass='') => {
 };
 
 const bookmarkGoTo = () => {
+    /* autofills the view form with the bookmark and submits it */
+
     closeForm('view', false);
     populateField('view-id', localStorage.getItem('bookmark-id'));
     populateField('view-view-pass', localStorage.getItem('bookmark-view-pass'));
@@ -480,7 +534,8 @@ const bookmarkPopupUpdate = () => {
     document.getElementById('bookmark-clear').classList[isBookmark ? 'remove':'add']('hide');
     document.getElementById('bookmark-title').innerText = localStorage.getItem('bookmark-title');
 
-    document.getElementById('nav-btn-bookmark').firstElementChild.innerText = isBookmark ? 'bookmark':'bookmark_border';
+    document.getElementById('nav-btn-bookmark').firstElementChild.innerText = 
+        isBookmark ? 'bookmark':'bookmark_border';
 
     if ('id' in currentImage && currentImage['id'] !== localStorage.getItem('bookmark-id')) {
         document.getElementById('bookmark-mark').classList.remove('hide');
@@ -495,20 +550,23 @@ const bookmarkPopupUpdate = () => {
 
 /* clicks */
 const dropClick = (e, formName) => {
-    /* handles clicks on form header buttons to open or close the form */
+    /* handles clicks on form header buttons to open or close the form
+    formName: the name of the form to open or close */
 
     closeForm(formName, e.currentTarget.classList.contains('drop-btn-open'));
 };
 
 const transferClick = (e, elemId) => {
-    /* handles clicks on elements that should act like clicks on other elements */
+    /* handles clicks on elements that should act like clicks on other elements
+    elemId: the ID of the element to execute a click on */
 
     document.getElementById(elemId).dispatchEvent(new MouseEvent('click'));
 };
 
 /* file inputs */
 const fileChange = (e, prevId) => {
-    /* handles change events on file inputs to display the file's name */
+    /* handles change events on file inputs to display the file's name
+    prevId: the ID of the 'preview' field to populate */
 
     const fileArray = e.currentTarget.files;
     document.getElementById(prevId).innerText = fileArray.length === 0 ? '' : fileArray[0].name;
@@ -516,13 +574,17 @@ const fileChange = (e, prevId) => {
 
 /* checkboxes */
 const checkboxChangeMsg = (e, msgboxId, msgT, msgF) => {
-    /* handles change events on a checkbox that is tied to a message box */
+    /* handles change events on a checkbox that is tied to a message box
+    msgboxId: the message box to change the text in
+    msgT: the message to display if the input is checked
+    msgF: the message to display if the input is not checked */
 
     document.getElementById(msgboxId).innerText = e.currentTarget.checked ? msgT : msgF;
 };
 
 const checkboxChangeClps = (e, clpsId) => {
-    /* handles change events on a checkbox that is tied to a collapsible */
+    /* handles change events on a checkbox that is tied to a collapsible
+    clpsId: the ID of the collapsible to show or hide */
 
     document.getElementById(clpsId).classList[
         e.currentTarget.checked ? 'remove' : 'add'
@@ -531,7 +593,8 @@ const checkboxChangeClps = (e, clpsId) => {
 
 /* navigation */
 const scrollToElement = (e, targetId) => {
-    /* handles clicks or other events that result in scrolling to another element */
+    /* handles clicks or other events that result in scrolling to another element
+    targetID: the ID of the element to scroll to */
 
     document.getElementById(targetId).scrollIntoView(true);
 };
@@ -552,7 +615,8 @@ const frmUpdate = document.getElementById('frm-update');
 
 /* navigation */
 document.getElementById('nav-btn-home').addEventListener('click', (e) => scrollToElement(e, 'welcome-row'));
-document.getElementById('nav-btn-bookmark').addEventListener('click', (e) => displayPopup('set-bookmark', bookmarkClick));
+document.getElementById('nav-btn-bookmark').addEventListener('click',
+    (e) => displayPopup('set-bookmark', bookmarkClick));
 
 /* upload form */
 document.getElementById('drop-upload').addEventListener('click', (e) => dropClick(e, 'upload'));
@@ -564,34 +628,47 @@ document.getElementById('upload-priv').addEventListener('change', (e) => {
     checkboxChangeMsg(e, 'upload-priv-msg', 'check', 'close');
     checkboxChangeClps(e, 'upload-view-pass-container');
 });
-document.getElementById('upload-edit-pass-refresh').addEventListener('click', (e) => populateField('upload-edit-pass', genPass()));
-document.getElementById('upload-edit-pass').addEventListener('click', (e) => transferClick(e, 'upload-edit-pass-copy'));
+document.getElementById('upload-edit-pass-refresh').addEventListener('click',
+    (e) => populateField('upload-edit-pass', genPass()));
+document.getElementById('upload-edit-pass').addEventListener('click',
+    (e) => transferClick(e, 'upload-edit-pass-copy'));
 document.getElementById('upload-edit-pass-copy').addEventListener('click', (e) => copyField('upload-edit-pass'));
-document.getElementById('upload-view-pass-refresh').addEventListener('click', (e) => populateField('upload-view-pass', genPass()));
-document.getElementById('upload-view-pass').addEventListener('click', (e) => transferClick(e, 'upload-view-pass-copy'));
+document.getElementById('upload-view-pass-refresh').addEventListener('click',
+    (e) => populateField('upload-view-pass', genPass()));
+document.getElementById('upload-view-pass').addEventListener('click',
+    (e) => transferClick(e, 'upload-view-pass-copy'));
 document.getElementById('upload-view-pass-copy').addEventListener('click', (e) => copyField('upload-view-pass'));
 document.getElementById('clps-btn-upload').addEventListener('change', (e) => {
     checkboxChangeMsg(e, 'clps-upload-msg', 'Show Fewer Options', 'Show More Options');
     checkboxChangeClps(e, 'clps-frm-upload');
 });
 document.getElementById('upload-nsfw-tog').addEventListener('click', (e) => transferClick(e, 'upload-nsfw'));
-document.getElementById('upload-nsfw').addEventListener('change', (e) => checkboxChangeMsg(e, 'upload-nsfw-msg', 'check', 'close'));
+document.getElementById('upload-nsfw').addEventListener('change',
+    (e) => checkboxChangeMsg(e, 'upload-nsfw-msg', 'check', 'close'));
 
 /* successful upload modal */
-document.getElementById('success-upload-id').addEventListener('click', (e) => transferClick(e, 'success-upload-id-copy'));
-document.getElementById('success-upload-edit-pass').addEventListener('click', (e) => transferClick(e, 'success-upload-edit-copy'));
-document.getElementById('success-upload-view-pass').addEventListener('click', (e) => transferClick(e, 'success-upload-view-copy'));
-document.getElementById('success-upload-id-copy').addEventListener('click', (e) => copyField('success-upload-id'));
-document.getElementById('success-upload-edit-copy').addEventListener('click', (e) => copyField('success-upload-edit-pass'));
-document.getElementById('success-upload-view-copy').addEventListener('click', (e) => copyField('success-upload-view-pass'));
+document.getElementById('success-upload-id').addEventListener('click',
+    (e) => transferClick(e, 'success-upload-id-copy'));
+document.getElementById('success-upload-edit-pass').addEventListener('click',
+    (e) => transferClick(e, 'success-upload-edit-copy'));
+document.getElementById('success-upload-view-pass').addEventListener('click',
+    (e) => transferClick(e, 'success-upload-view-copy'));
+document.getElementById('success-upload-id-copy').addEventListener('click',
+    (e) => copyField('success-upload-id'));
+document.getElementById('success-upload-edit-copy').addEventListener('click',
+    (e) => copyField('success-upload-edit-pass'));
+document.getElementById('success-upload-view-copy').addEventListener('click',
+    (e) => copyField('success-upload-view-pass'));
 
 /* view form */
 document.getElementById('drop-view').addEventListener('click', (e) => dropClick(e, 'view'));
 document.getElementById('view-info').addEventListener('click', (e) => displayPopup('info-view', nop));
 
 /* image display */
-document.getElementById('display-permalink').addEventListener('click', (e) => transferClick(e, 'display-permalink-copy'));
-document.getElementById('display-permalink-copy').addEventListener('click', (e) => copyField('display-permalink'));
+document.getElementById('display-permalink').addEventListener('click',
+    (e) => transferClick(e, 'display-permalink-copy'));
+document.getElementById('display-permalink-copy').addEventListener('click',
+    (e) => copyField('display-permalink'));
 document.getElementById('copyright-info').addEventListener('click', (e) => displayPopup('info-copyright', nop));
 
 /* unlock form */
@@ -609,16 +686,20 @@ document.getElementById('update-priv').addEventListener('change', (e) => {
     checkboxChangeMsg(e, 'update-priv-msg', 'check', 'close');
     checkboxChangeClps(e, 'update-view-pass-container');
 });
-document.getElementById('update-view-pass-refresh').addEventListener('click', (e) => populateField('update-view-pass', genPass()));
-document.getElementById('update-view-pass').addEventListener('click', (e) => transferClick(e, 'update-view-pass-copy'));
+document.getElementById('update-view-pass-refresh').addEventListener('click',
+    (e) => populateField('update-view-pass', genPass()));
+document.getElementById('update-view-pass').addEventListener('click',
+    (e) => transferClick(e, 'update-view-pass-copy'));
 document.getElementById('update-view-pass-copy').addEventListener('click', (e) => copyField('update-view-pass'));
-document.getElementById('update-view-pass-clear').addEventListener('click', (e) => populateField('update-view-pass', ''));
+document.getElementById('update-view-pass-clear').addEventListener('click',
+    (e) => populateField('update-view-pass', ''));
 document.getElementById('clps-btn-update').addEventListener('change', (e) => {
     checkboxChangeMsg(e, 'clps-update-msg', 'Show Fewer Options', 'Show More Options');
     checkboxChangeClps(e, 'clps-frm-update');
 });
 document.getElementById('update-nsfw-tog').addEventListener('click', (e) => transferClick(e, 'update-nsfw'));
-document.getElementById('update-nsfw').addEventListener('change', (e) => checkboxChangeMsg(e, 'update-nsfw-msg', 'check', 'close'));
+document.getElementById('update-nsfw').addEventListener('change',
+    (e) => checkboxChangeMsg(e, 'update-nsfw-msg', 'check', 'close'));
 
 /* comment form */
 document.getElementById('drop-comment').addEventListener('click', (e) => dropClick(e, 'comment'));
@@ -643,7 +724,7 @@ frmUpdate.addEventListener('customReset', (e) => {
     elements['title'].placeholder = currentImage['title'];
     elements['priv'].checked = currentImage['priv'];
     elements['view-pass'].placeholder = currentImage['view-pass'];
-    if (!currentImage['priv']) elements['view-pass'].value = genPass();
+    if (!currentImage['priv']) populateField('update-view-pass', genPass());
     elements['author'].value = currentImage['author'];
     elements['copyright'].value = currentImage['copyright'];
     elements['nsfw'].checked = currentImage['nsfw'];
@@ -685,7 +766,7 @@ frmUpload.addEventListener('submit', (e) => {
         return; // end execution here, rather than trying the fetch request
     }
 
-    makeRequest('/image/upload', { // make the request
+    makeRequest('/image/upload', {
         method: 'POST',
         body: data
     }, (retdata) => {
@@ -699,7 +780,8 @@ frmUpload.addEventListener('submit', (e) => {
 
         displayPopup('success-upload', (err, ret) => {
             if (err) throw err;
-            if (ret === 'display') { // corresponds to the 'show image' button
+            if (ret === 'display') {
+                /* if the user clicked 'Show Image', do that */
                 getImage(retdata['id'], data.get('view-pass'), (err, imageData) => {
                     if (err) throw err;
                     currentImage = imageData;
@@ -727,7 +809,8 @@ document.getElementById('frm-view').addEventListener('submit', (e) => {
         return;
     }
 
-    getImage(elements['id'].value, elements['view-pass'].value, (err, imageData) => { // get the image data
+    getImage(elements['id'].value, elements['view-pass'].value, (err, imageData) => {
+        if (err) throw err;
         if (imageData['id'] === localStorage.getItem('bookmark-id')) {
             /* update bookmark if needed */
             localStorage.setItem('bookmark-view-pass', imageData['view-pass']);
@@ -736,6 +819,7 @@ document.getElementById('frm-view').addEventListener('submit', (e) => {
         if (imageData['nsfw']) {
             /* confirm that the user wants to see an NSFW image */
             displayPopup('nsfw-view', (err, ret) => {
+                if (err) throw err;
                 if (ret === 'confirm') {
                     currentImage = imageData;
                     displayImage();
@@ -772,7 +856,6 @@ document.getElementById('frm-unlock').addEventListener('submit', (e) => {
         method: 'POST',
         body: data
     }, () => {
-
         /* get rid of the unlock form and display the update form */
         currentImage['edit-pass'] = data.get('edit-pass');
         hideForm('unlock');
@@ -802,7 +885,7 @@ frmUpdate.addEventListener('submit', (e) => {
             markInvalid('update', ['file'], () => {
                 changeButtonStatus('update-submit','btn-grn','Update', false);
             });
-            return; // halt here instead of making fetch request
+            return;
         }
         data.append('file', elements['file'].files[0]);
     }
@@ -822,7 +905,7 @@ frmUpdate.addEventListener('submit', (e) => {
         /* if there is nothing to update, mark ALL inputs as invalid until ONE of them changes */
         changeButtonStatus('update-submit', 'btn-red', 'No Changes', true);
         for (let input of elements) {
-            if (!input.name) continue; // because its a button or dropdown header or something
+            if (!input.name) continue; // skip things like info buttons and dropdown headers
             input.classList.add('invalid');
             let handler = (e) => {
                 for (let inputInner of elements) {
@@ -836,11 +919,12 @@ frmUpdate.addEventListener('submit', (e) => {
         return;
     }
 
-    makeRequest('/image/update', { // send the form data
+    makeRequest('/image/update', {
         method: 'POST',
         body: data
     }, () => {
         getImage(data.get('id'), data.get('view-pass') || currentImage['view-pass'], (err, imageData) => {
+            /* refresh the displayed image */
             if (err) throw err;
             let pass = currentImage['edit-pass'];
             currentImage = imageData;
@@ -863,10 +947,13 @@ document.getElementById('frm-comment').addEventListener('submit', (e) => {
 
     const elements = e.currentTarget.elements;
     let data = new FormData();
+
     data.append('id', currentImage['id']);
     if (currentImage['view-pass'] !== '') data.append('view-pass', currentImage['view-pass']);
     if (elements['display-name'].value !== '') data.append('display-name', elements['display-name'].value);
+
     if (elements['text'].value === '') {
+        /* validation error if there is no comment text */
         changeButtonStatus('comment-submit', 'btn-red', 'Validation Error', true);
         markInvalid('comment', ['text'], () => {
             changeButtonStatus('comment-submit','btn-grn','Leave Comment', false);
@@ -906,9 +993,12 @@ document.getElementById('success-upload-download').addEventListener('click', (e)
 });
 
 document.getElementById('update-delete').addEventListener('click', (e) => {
+    /* after a warning to confirm, delete the image */
+
     displayPopup('delete-confirm', (err, ret) => {
         if (err) throw err;
         if (ret === 'confirm') {
+            /* the user is sure */
             let data = new FormData();
             data.append('id', currentImage['id']);
             data.append('edit-pass', currentImage['edit-pass']);
