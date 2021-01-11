@@ -1,4 +1,4 @@
-# METHOD /uri/path
+# METHOD `/uri/path`
 
 A short description of the purpose of the request
 
@@ -29,4 +29,14 @@ Name | Type | Description
 --- | --- | ---
 `status` | integer | The status code returned from the request
 `return_1` | string | A one-line description of this field
-`invalid` | array of string | Returned with a 400 request. A list of query parameters that were invalid
+`invalid` | array of string | Returned with a 400 response. A list of query parameters that were invalid
+
+## Error Responses
+
+Status Code | Name | Description
+--- | --- | ---
+400 | Not Valid | At least one required query parameter was missing, or a parameter had an invalid type or value
+401 | Unauthorised | The request required a passcode, and one was not provided
+403 | Forbidden | The passcode sent was invalid, or does not match the requested resource
+404 | Not Found | The ID sent in this request does not match a resource
+500 | Internal Server Error | Some other error occurred
