@@ -347,3 +347,7 @@ input[type="submit"]:hover:enabled, input[type="submit"]:focus, .btn:hover:enabl
 .comment-time-ago {
     font-size: 0.7em;
 }
+
+.comment-body {
+    word-wrap: break-word;
+}
