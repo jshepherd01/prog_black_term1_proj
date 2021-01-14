@@ -180,3 +180,42 @@ Status Code | Name | Description
 --- | --- | ---
 400 | Not Valid | At least one required query parameter was missing, or a parameter had an invalid type or value
 500 | Internal Server Error | Some other error occurred
+
+# <a name="image-verify"></a> POST `/image/verify`
+
+Confirms whether or not a passcode can be used to edit an image.
+
+## Query Type
+
+`multipart/form-data`
+
+## Query Parameters
+
+Name | Type | Description | Default
+--- | --- | --- | ---
+`id` | string | The Universally Unique ID of the image
+`edit-pass` | string | The passcode to confirm
+
+## Example Response
+
+```jsonc
+{
+    "status": 200
+}
+```
+
+## Response Fields
+
+Name | Type | Description
+--- | --- | ---
+`status` | integer | The status code returned from the request
+`invalid` | array of string | Returned with a 400 response. A list of query parameters that were invalid
+
+## Error Responses
+
+Status Code | Name | Description
+--- | --- | ---
+400 | Not Valid | At least one required query parameter was missing, or a parameter had an invalid type or value
+403 | Forbidden | The passcode sent was invalid, or does not match the requested resource
+404 | Not Found | The ID sent in this request does not match a resource
+500 | Internal Server Error | Some other error occurred
