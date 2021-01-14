@@ -29,13 +29,13 @@ Name | Type | Description
 
 ```json
 {
-    status: 200,
-    title: 'A title',
-    priv: true,
-    author: 'Authy McAuthorface',
-    copyright: 'A long, long string containing:\nCopyright Info',
-    nsfw: false,
-    timestamp: 1610619915325
+    "status": 200,
+    "title": "A title",
+    "priv": true,
+    "author": "Authy McAuthorface",
+    "copyright": "A long, long string containing:\nCopyright Info",
+    "nsfw": false,
+    "timestamp": 1610619915325
 }
 ```
 
