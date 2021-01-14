@@ -1,4 +1,4 @@
-# METHOD /uri/path
+# <a name="uri-path"></a> METHOD /uri/path
 
 A short description of the purpose of the request
 
