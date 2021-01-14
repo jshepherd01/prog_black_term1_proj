@@ -111,3 +111,28 @@ Status Code | Name | Description
 --- | --- | ---
 400 | Not Valid | The parameter had an invalid type or value
 500 | Internal Server Error | Some other error occurred
+
+# <a name="image-embed"></a> GET `/image/embed`
+
+Gets an actual image file from the server, without metadata, such as could be embedded in a webpage.
+
+## Query Parameters
+
+Name | Type | Description
+--- | --- | ---
+`id` | string | The Universally Unique ID of the image
+`view-pass` (optional) | string | The passcode for viewing the image (required if the image is private)
+
+## Response type
+
+`image/*` Depending on the mime type of the image as it was when uploaded. Error responses are `image/png`
+
+## Error Responses
+
+Status Code | Name | Description
+--- | --- | ---
+400 | Not Valid | The required query parameter was missing, or a parameter had an invalid type or value
+401 | Unauthorised | The request required a passcode, and one was not provided
+403 | Forbidden | The passcode sent was invalid, or does not match the requested resource
+404 | Not Found | The ID sent in this request does not match a resource
+500 | Internal Server Error | Some other error occurred
