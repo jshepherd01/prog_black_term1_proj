@@ -46,8 +46,68 @@ Name | Type | Description
 `status` | integer | The status code returned from the request. Returned with any request status, except possibly 500.
 `title` | string | The title of the image
 `priv` | boolean | Whether the image requires a `view-pass` to access
-`author` | string | The name given as the creator of the image
-`copyright` | string | The copyright information given for the image
+`author` | string | The name given as the creator of the image. Can be empty
+`copyright` | string | The copyright information given for the image. Can be multiple lines. Can be empty
 `nsfw` | boolean | Whether the image is marked as 'Not Safe For Work'
 `timestamp` | integer | The timestamp in milliseconds that the image was posted or last updated, from JavaScript's `Date.now()`
 `invalid` | array of string | Returned with a 400 request. A list of query parameters that were invalid
+
+## Error Responses
+
+Status Code | Name | Description
+--- | --- | ---
+400 | Not Valid | The required query parameter was missing, or a parameter had an invalid type or value
+401 | Unauthorised | The request required a passcode, and one was not provided
+403 | Forbidden | The passcode sent was invalid, or does not match the requested resource
+404 | Not Found | The ID sent in this request does not match a resource
+500 | Internal Server Error | Some other error occurred
+
+# <a name="image-list"></a> GET `/image/list`
+
+Gets information associated with all public images from the server.
+
+## Query Parameters
+
+Name | Type | Description
+--- | --- | ---
+`nsfw` (optional) | string | Whether to include NSFW results. If omitted, NSFW results are removed. If included, both NSFW and SFW results are returned. If set to `"true"`, only NSFW results are returned
+
+## Example Response
+
+```jsonc
+{
+    "status": 200,
+    "images": [
+        {
+            "id": "03af5278-fb18-4aad-9dbf-5deebe40e5a3",
+            "title": "A title",
+            "author": "Authy McAuthorface",
+            "copyright": "A long, long string containing:\nCopyright Info",
+            "nsfw": false,
+            "timestamp": 1610619915325
+        },
+        // ...
+    ]
+}
+```
+
+## Response fields
+
+Name | Type | Description
+--- | --- | ---
+`status` | integer | The status code returned from the request
+`images` | list of object | A list of objects representing the images returned from the request
+`images[i].id` | string | The Universally Unique ID of the ith image returned
+`images[i].title` | string | The title of the image
+`images[i].author` | string | The name given as the creator of the image. Can be empty
+`images[i].copyright` | string | The copyright information given for the image. Can be multiple lines. Can be empty
+`images[i].nsfw` | boolean | Whether the image is marked as 'Not Safe For Work'
+`images[i].timestamp` | integer | The timestamp in milliseconds that the image was posted or last updated, from JavaScript's `Date.now()`
+`invalid` | array of string | Returned with a 400 response. A list of query parameters that were invalid
+
+## Error Responses
+
+Status Code | Name | Description
+--- | --- | ---
+400 | Not Valid | The parameter had an invalid type or value
+500 | Internal Server Error | Some other error occurred
