@@ -29,8 +29,13 @@ Name | Type | Description
 
 ```json
 {
-    "status": 200,
-    "return_1": "blah blah blah"
+    status: 200,
+    title: 'A title',
+    priv: true,
+    author: 'Authy McAuthorface',
+    copyright: 'A long, long string containing:\nCopyright Info',
+    nsfw: false,
+    timestamp: 1610619915325
 }
 ```
 
@@ -38,6 +43,11 @@ Name | Type | Description
 
 Name | Type | Description
 --- | --- | ---
-`status` | integer | The status code returned from the request
-`return_1` | string | A one-line description of this field
+`status` | integer | The status code returned from the request. Returned with any request status, except possibly 500.
+`title` | string | The title of the image
+`priv` | boolean | Whether the image requires a `view-pass` to access
+`author` | string | The name given as the creator of the image
+`copyright` | string | The copyright information given for the image
+`nsfw` | boolean | Whether the image is marked as 'Not Safe For Work'
+`timestamp` | integer | The timestamp in milliseconds that the image was posted or last updated, from JavaScript's `Date.now()`
 `invalid` | array of string | Returned with a 400 request. A list of query parameters that were invalid
