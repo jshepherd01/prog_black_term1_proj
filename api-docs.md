@@ -33,7 +33,7 @@ Name | Type | Description
     "title": "A title",
     "priv": true,
     "author": "Authy McAuthorface",
-    "copyright": "A long, long string containing:\nCopyright Info",
+    "copyright": "Lorem ipsum dolor sit amet,\nconsectetur adipiscing elit.",
     "nsfw": false,
     "timestamp": 1610619915325
 }
@@ -82,7 +82,7 @@ Name | Type | Description
             "id": "03af5278-fb18-4aad-9dbf-5deebe40e5a3",
             "title": "A title",
             "author": "Authy McAuthorface",
-            "copyright": "A possibly very long string containing:\nCopyright Info",
+            "copyright": "Lorem ipsum dolor sit amet,\nconsectetur adipiscing elit.",
             "nsfw": false,
             "timestamp": 1610619915325
         },
@@ -300,6 +300,50 @@ Name | Type | Description
 Status Code | Name | Description
 --- | --- | ---
 400 | Not Valid | At least one required query parameter was missing or empty, or a parameter had an invalid type or value
+403 | Forbidden | The passcode sent was invalid, or does not match the requested resource
+404 | Not Found | The ID sent in this request does not match a resource
+500 | Internal Server Error | Some other error occurred
+
+# <a name="comment-get"></a> GET `/comment/get`
+
+Returns all data associated with a comment ID from the server.
+
+## Query Parameters
+
+Name | Type | Description
+--- | --- | ---
+`id` | string | The Universally Unique ID of the comment
+`view-pass` (optional) | string | The passcode for viewing the image the comment was posted to (required if the image is private)
+
+## Example Response
+
+```jsonc
+{
+    "status": 200,
+    "image-id": "03af5278-fb18-4aad-9dbf-5deebe40e5a3",
+    "display-name": "Anonymous",
+    "text": "Lorem ipsum dolor sit amet,\nconsectetur adipiscing elit.",
+    "timestamp": 1610619915325
+}
+```
+
+## Response Fields
+
+Name | Type | Description
+--- | --- | ---
+`status` | integer | The status code returned from the request
+`image-id` | string | The Universally Unique ID of the image that the comment was posted on
+`display-name` | string | The name associated with the comment. Note that this can be any string, it does not need to be a real name
+`text` | string | The content of the comment itself. Can be multiple lines
+`timestamp` | integer | The timestamp in milliseconds that the comment was posted, from JavaScript's `Date.now()`
+`invalid` | array of string | Returned with a 400 response. A list of query parameters that were invalid
+
+## Error Responses
+
+Status Code | Name | Description
+--- | --- | ---
+400 | Not Valid | The required query parameter was missing or empty, or a parameter had an invalid type or value
+401 | Unauthorised | The request required a passcode, and one was not provided
 403 | Forbidden | The passcode sent was invalid, or does not match the requested resource
 404 | Not Found | The ID sent in this request does not match a resource
 500 | Internal Server Error | Some other error occurred
