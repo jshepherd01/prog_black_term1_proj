@@ -347,3 +347,53 @@ Status Code | Name | Description
 403 | Forbidden | The passcode sent was invalid, or does not match the requested resource
 404 | Not Found | The ID sent in this request does not match a resource
 500 | Internal Server Error | Some other error occurred
+
+# <a name="comment-list"></a> GET `/comment/list`
+
+Retrieves a list of comments on a particular image from the server.
+
+## Query Parameters
+
+Name | Type | Description
+--- | --- | ---
+`id` | string | The Universally Unique ID of the image
+`view-pass` (optional) | string | The passcode for viewing the image (required if the image is private)
+
+## Example Response
+
+```jsonc
+{
+    "status": 200,
+    "comments": [
+        {
+            "id": "03af5278-fb18-4aad-9dbf-5deebe40e5a3",
+            "display-name": "Anonymous",
+            "text": "Lorem ipsum dolor sit amet,\nconsectetur adipiscing elit.",
+            "timestamp": 1610619915325
+        },
+        // ...
+    ]
+}
+```
+
+## Response Fields
+
+Name | Type | Description
+--- | --- | ---
+`status` | integer | The status code returned from the request
+`comments` | list of object | A list of objects representing the comments returned from the request
+`comments[i].id` | string | The Universally Unique ID of the ith comment returned
+`comments[i].display-name` | string |The name associated with the comment. Note that this can be any string, it does not need to be a real name
+`comments[i].text` | string | The content of the comment itself. Can be multiple lines
+`comments[i].timestamp` | integer | The timestamp in milliseconds that the comment was posted, from JavaScript's `Date.now()`
+`invalid` | array of string | Returned with a 400 response. A list of query parameters that were invalid
+
+## Error Responses
+
+Status Code | Name | Description
+--- | --- | ---
+400 | Not Valid | The required query parameter was missing or empty, or a parameter had an invalid type or value
+401 | Unauthorised | The request required a passcode, and one was not provided
+403 | Forbidden | The passcode sent was invalid, or does not match the requested resource
+404 | Not Found | The ID sent in this request does not match a resource
+500 | Internal Server Error | Some other error occurred
