@@ -2,7 +2,8 @@
 
 - Jest testing
 - Clean up after testing
-- Document API
+- Proofread API docs
+- Convert API docs to html
 
 # Misc
 
