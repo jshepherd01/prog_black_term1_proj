@@ -191,8 +191,8 @@ Confirms whether or not a passcode can be used to edit an image.
 
 ## Query Parameters
 
-Name | Type | Description | Default
---- | --- | --- | ---
+Name | Type | Description
+--- | --- | ---
 `id` | string | The Universally Unique ID of the image
 `edit-pass` | string | The passcode to confirm
 
@@ -230,8 +230,8 @@ Changes the data associated with an image, including possibly the image file.
 
 ## Query Parameters
 
-Name | Type | Description | Default
---- | --- | --- | ---
+Name | Type | Description
+--- | --- | ---
 `id` | string | The Universally Unique ID of the image
 `edit-pass` | string | The passcode needed to edit the image
 `title` (optional) | string | The title to give the image. If missing, the title will not be changed. Cannot be empty
@@ -240,6 +240,45 @@ Name | Type | Description | Default
 `nsfw` (optional) | string `"true"` or `"false"` | Whether to mark the image as Not Safe For Work. If missing, this data will not be changed
 `author` (optional) | string | The name to be associated with the image as its author. Note that this can be any string, it does not need to be a real name. If empty, this data will be cleared. If missing, this data will not be changed
 `copyright` (optional) | string | The copyright information to be associated with the image. Can be multiple lines. If empty, this data will be cleared. If missing, this data will not be changed
+
+## Example Response
+
+```jsonc
+{
+    "status": 200
+}
+```
+
+## Response Fields
+
+Name | Type | Description
+--- | --- | ---
+`status` | integer | The status code returned from the request
+`invalid` | array of string | Returned with a 400 response. A list of query parameters that were invalid
+
+## Error Responses
+
+Status Code | Name | Description
+--- | --- | ---
+400 | Not Valid | At least one required query parameter was missing or empty, or a parameter had an invalid type or value
+403 | Forbidden | The passcode sent was invalid, or does not match the requested resource
+404 | Not Found | The ID sent in this request does not match a resource
+500 | Internal Server Error | Some other error occurred
+
+# <a name="image-delete"></a> POST `/image/delete`
+
+Permanently deletes an image, and all data associated with it, from the server.
+
+## Query Type
+
+`multipart/form-data`
+
+## Query Parameters
+
+Name | Type | Description
+--- | --- | ---
+`id` | string | The Universally Unique ID of the image
+`edit-pass` | string | The passcode needed to edit the image
 
 ## Example Response
 
