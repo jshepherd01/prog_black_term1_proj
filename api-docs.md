@@ -397,3 +397,47 @@ Status Code | Name | Description
 403 | Forbidden | The passcode sent was invalid, or does not match the requested resource
 404 | Not Found | The ID sent in this request does not match a resource
 500 | Internal Server Error | Some other error occurred
+
+# <a name="comment-upload"></a> POST `/comment/upload`
+
+Posts a comment on an image.
+
+## Query Type
+
+`multipart/form-data`
+
+## Query Parameters
+
+Name | Type | Description
+--- | --- | ---
+`id` | string | The Universally Unique ID of the image
+`view-pass` (optional) | string | The passcode for viewing the image (required if the image is private)
+`display-name` (optional) | string | The name to be associated with the comment. If empty or missing, the name will be set to `"Anonymous"`
+`text` | string | The content of the comment itself. Can be multiple lines
+
+## Example Response
+
+```jsonc
+{
+    "status": 200,
+    "id": "03af5278-fb18-4aad-9dbf-5deebe40e5a3"
+}
+```
+
+## Response Fields
+
+Name | Type | Description
+--- | --- | ---
+`status` | integer | The status code returned from the request
+`id` | string | The Universally Unique ID of the comment
+`invalid` | array of string | Returned with a 400 response. A list of query parameters that were invalid
+
+## Error Responses
+
+Status Code | Name | Description
+--- | --- | ---
+400 | Not Valid | At least one required query parameter was missing or empty, or a parameter had an invalid type or value
+401 | Unauthorised | The request required a passcode, and one was not provided
+403 | Forbidden | The passcode sent was invalid, or does not match the requested resource
+404 | Not Found | The ID sent in this request does not match a resource
+500 | Internal Server Error | Some other error occurred
