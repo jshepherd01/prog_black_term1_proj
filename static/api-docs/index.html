@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>API Documentation</title>
+        <link rel="stylesheet" href="docs.css">
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+<h1>
+<a id="user-content-api-reference-index" class="anchor" href="#api-reference-index" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>API reference index</h1>
+<h2>
+<a id="user-content-images" class="anchor" href="#images" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Images</h2>
+<ol>
+<li><a href="#user-content--get-imageget">GET /image/get</a></li>
+<li><a href="#user-content--get-imagelist">GET /image/list</a></li>
+<li><a href="#user-content--get-imageembed">GET /image/embed</a></li>
+<li><a href="#user-content--post-imageupload">POST /image/upload</a></li>
+<li><a href="#user-content--post-imageverify">POST /image/verify</a></li>
+<li><a href="#user-content--post-imageupdate">POST /image/update</a></li>
+<li><a href="#user-content--post-imagedelete">POST /image/delete</a></li>
+</ol>
+<h2>
+<a id="user-content-comments" class="anchor" href="#comments" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Comments</h2>
+<ol>
+<li><a href="#user-content--get-commentget">GET /comment/get</a></li>
+<li><a href="#user-content--post-commentlist">GET /comment/list</a></li>
+<li><a href="#user-content--post-commentupload">POST /comment/upload</a></li>
+</ol>
+<h1>
+<a id="user-content--get-imageget" class="anchor" href="#-get-imageget" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> GET <code>/image/get</code>
+</h1>
+<p>Gets all information associated with an image ID from the server.</p>
+<h2>
+<a id="user-content-query-parameters" class="anchor" href="#query-parameters" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>string</td>
+<td>The Universally Unique ID of the image</td>
+</tr>
+<tr>
+<td>
+<code class="amb">view-pass</code> (optional)</td>
+<td>string</td>
+<td>The passcode for viewing the image (required if the image is private)</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-example-response" class="anchor" href="#example-response" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example Response</h2>
+<div class="highlight highlight-source-json"><pre>{
+    <span class="grn"><span class="pl-pds">"</span>status<span class="pl-pds">"</span></span>: <span class="amb">200</span>,
+    <span class="grn"><span class="pl-pds">"</span>title<span class="pl-pds">"</span></span>: <span class="grn"><span class="pl-pds">"</span>A title<span class="pl-pds">"</span></span>,
+    <span class="grn"><span class="pl-pds">"</span>priv<span class="pl-pds">"</span></span>: <span class="amb">true</span>,
+    <span class="grn"><span class="pl-pds">"</span>author<span class="pl-pds">"</span></span>: <span class="grn"><span class="pl-pds">"</span>Authy McAuthorface<span class="pl-pds">"</span></span>,
+    <span class="grn"><span class="pl-pds">"</span>copyright<span class="pl-pds">"</span></span>: <span class="grn"><span class="pl-pds">"</span>Lorem ipsum dolor sit amet,<span class="amb">\n</span>consectetur adipiscing elit.<span class="pl-pds">"</span></span>,
+    <span class="grn"><span class="pl-pds">"</span>nsfw<span class="pl-pds">"</span></span>: <span class="amb">false</span>,
+    <span class="grn"><span class="pl-pds">"</span>timestamp<span class="pl-pds">"</span></span>: <span class="amb">1610619915325</span>
+}</pre></div>
+<h2>
+<a id="user-content-response-fields" class="anchor" href="#response-fields" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Response Fields</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td>integer</td>
+<td>The status code returned from the request. Returned with any request status, except possibly 500.</td>
+</tr>
+<tr>
+<td><code>title</code></td>
+<td>string</td>
+<td>The title of the image</td>
+</tr>
+<tr>
+<td><code>priv</code></td>
+<td>boolean</td>
+<td>Whether the image requires a <code>view-pass</code> to access</td>
+</tr>
+<tr>
+<td><code>author</code></td>
+<td>string</td>
+<td>The name given as the creator of the image. Can be empty</td>
+</tr>
+<tr>
+<td><code>copyright</code></td>
+<td>string</td>
+<td>The copyright information given for the image. Can be multiple lines. Can be empty</td>
+</tr>
+<tr>
+<td><code>nsfw</code></td>
+<td>boolean</td>
+<td>Whether the image is marked as 'Not Safe For Work'</td>
+</tr>
+<tr>
+<td><code>timestamp</code></td>
+<td>integer</td>
+<td>The timestamp in milliseconds that the image was posted or last updated, from JavaScript's <code>Date.now()</code>
+</td>
+</tr>
+<tr>
+<td><code class="red">invalid</code></td>
+<td>array of string</td>
+<td>Returned with a 400 request. A list of query parameters that were invalid</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-error-responses" class="anchor" href="#error-responses" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Error Responses</h2>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td>Not Valid</td>
+<td>The required query parameter was missing or empty, or a parameter had an invalid type or value</td>
+</tr>
+<tr>
+<td>401</td>
+<td>Unauthorised</td>
+<td>The request required a passcode, and one was not provided</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Forbidden</td>
+<td>The passcode sent was invalid, or does not match the requested resource</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Not Found</td>
+<td>The ID sent in this request does not match a resource</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Internal Server Error</td>
+<td>Some other error occurred</td>
+</tr>
+</tbody>
+</table>
+<h1>
+<a id="user-content--get-imagelist" class="anchor" href="#-get-imagelist" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> GET <code>/image/list</code>
+</h1>
+<p>Gets information associated with all public images from the server.</p>
+<h2>
+<a id="user-content-query-parameters-1" class="anchor" href="#query-parameters-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>
+<code class="amb">nsfw</code> (optional)</td>
+<td>string</td>
+<td>Whether to include NSFW results. If omitted, NSFW results are removed. If included, both NSFW and SFW results are returned. If set to <code>"true"</code>, only NSFW results are returned</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-example-response-1" class="anchor" href="#example-response-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example Response</h2>
+<div class="highlight highlight-source-js"><pre><span class="pl-kos">{</span>
+    <span class="grn">"status"</span>: <span class="amb">200</span><span class="pl-kos">,</span>
+    <span class="grn">"images"</span>: <span class="pl-kos">[</span>
+        <span class="pl-kos">{</span>
+            <span class="grn">"id"</span>: <span class="grn">"03af5278-fb18-4aad-9dbf-5deebe40e5a3"</span><span class="pl-kos">,</span>
+            <span class="grn">"title"</span>: <span class="grn">"A title"</span><span class="pl-kos">,</span>
+            <span class="grn">"author"</span>: <span class="grn">"Authy McAuthorface"</span><span class="pl-kos">,</span>
+            <span class="grn">"copyright"</span>: <span class="grn">"Lorem ipsum dolor sit amet,<span class="amb">\n</span>consectetur adipiscing elit."</span><span class="pl-kos">,</span>
+            <span class="grn">"nsfw"</span>: <span class="amb">false</span><span class="pl-kos">,</span>
+            <span class="grn">"timestamp"</span>: <span class="amb">1610619915325</span>
+        <span class="pl-kos">}</span><span class="pl-kos">,</span>
+        <span class="gry">// ...</span>
+    <span class="pl-kos">]</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>
+<a id="user-content-response-fields-1" class="anchor" href="#response-fields-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Response Fields</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td>integer</td>
+<td>The status code returned from the request</td>
+</tr>
+<tr>
+<td><code>images</code></td>
+<td>list of object</td>
+<td>A list of objects representing the images returned from the request</td>
+</tr>
+<tr>
+<td><code>images[i].id</code></td>
+<td>string</td>
+<td>The Universally Unique ID of the ith image returned</td>
+</tr>
+<tr>
+<td><code>images[i].title</code></td>
+<td>string</td>
+<td>The title of the image</td>
+</tr>
+<tr>
+<td><code>images[i].author</code></td>
+<td>string</td>
+<td>The name given as the creator of the image. Can be empty</td>
+</tr>
+<tr>
+<td><code>images[i].copyright</code></td>
+<td>string</td>
+<td>The copyright information given for the image. Can be multiple lines. Can be empty</td>
+</tr>
+<tr>
+<td><code>images[i].nsfw</code></td>
+<td>boolean</td>
+<td>Whether the image is marked as 'Not Safe For Work'</td>
+</tr>
+<tr>
+<td><code>images[i].timestamp</code></td>
+<td>integer</td>
+<td>The timestamp in milliseconds that the image was posted or last updated, from JavaScript's <code>Date.now()</code>
+</td>
+</tr>
+<tr>
+<td><code class="red">invalid</code></td>
+<td>array of string</td>
+<td>Returned with a 400 response. A list of query parameters that were invalid</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-error-responses-1" class="anchor" href="#error-responses-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Error Responses</h2>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td>Not Valid</td>
+<td>The parameter had an invalid type or value</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Internal Server Error</td>
+<td>Some other error occurred</td>
+</tr>
+</tbody>
+</table>
+<h1>
+<a id="user-content--get-imageembed" class="anchor" href="#-get-imageembed" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> GET <code>/image/embed</code>
+</h1>
+<p>Gets an actual image file from the server, without metadata, such as could be embedded in a webpage.</p>
+<h2>
+<a id="user-content-query-parameters-2" class="anchor" href="#query-parameters-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>string</td>
+<td>The Universally Unique ID of the image</td>
+</tr>
+<tr>
+<td>
+<code class="amb">view-pass</code> (optional)</td>
+<td>string</td>
+<td>The passcode for viewing the image (required if the image is private)</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-response-type" class="anchor" href="#response-type" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Response type</h2>
+<p><code>image/*</code> Depending on the mime type of the image as it was when uploaded. Error responses are <code>image/png</code></p>
+<h2>
+<a id="user-content-error-responses-2" class="anchor" href="#error-responses-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Error Responses</h2>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td>Not Valid</td>
+<td>The required query parameter was missing or empty, or a parameter had an invalid type or value</td>
+</tr>
+<tr>
+<td>401</td>
+<td>Unauthorised</td>
+<td>The request required a passcode, and one was not provided</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Forbidden</td>
+<td>The passcode sent was invalid, or does not match the requested resource</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Not Found</td>
+<td>The ID sent in this request does not match a resource</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Internal Server Error</td>
+<td>Some other error occurred</td>
+</tr>
+</tbody>
+</table>
+<h1>
+<a id="user-content--post-imageupload" class="anchor" href="#-post-imageupload" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> POST <code>/image/upload</code>
+</h1>
+<p>Creates a new image record on the server, sets metadata of it, and uploads an image for it.</p>
+<h2>
+<a id="user-content-query-type" class="anchor" href="#query-type" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Type</h2>
+<p><code>multipart/form-data</code></p>
+<h2>
+<a id="user-content-query-parameters-3" class="anchor" href="#query-parameters-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>title</code></td>
+<td>string</td>
+<td>The title to give the image</td>
+</tr>
+<tr>
+<td><code>file</code></td>
+<td>image file</td>
+<td>The image file to be uploaded</td>
+</tr>
+<tr>
+<td><code>edit-pass</code></td>
+<td>string</td>
+<td>The passcode that will be needed to edit the image</td>
+</tr>
+<tr>
+<td>
+<code class="amb">view-pass</code> (optional)</td>
+<td>string</td>
+<td>The passcode that will be needed to view the image. If missing or empty, the image will be made public</td>
+</tr>
+<tr>
+<td>
+<code class="amb">nsfw</code> (optional)</td>
+<td>string <code>"true"</code> or <code>"false"</code>
+</td>
+<td>Whether to mark the image as Not Safe For Work. If missing, the image will not be marked</td>
+</tr>
+<tr>
+<td>
+<code class="amb">author</code> (optional)</td>
+<td>string</td>
+<td>The name to be associated with the image as its author. Note that this can be any string, it does not need to be a real name</td>
+</tr>
+<tr>
+<td>
+<code class="amb">copyright</code> (optional)</td>
+<td>string</td>
+<td>The copyright information to be associated with the image. Can be multiple lines</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-example-response-2" class="anchor" href="#example-response-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example Response</h2>
+<div class="highlight highlight-source-json"><pre>{
+    <span class="grn"><span class="pl-pds">"</span>status<span class="pl-pds">"</span></span>: <span class="amb">200</span>,
+    <span class="grn"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span>: <span class="grn"><span class="pl-pds">"</span>03af5278-fb18-4aad-9dbf-5deebe40e5a3<span class="pl-pds">"</span></span>
+}</pre></div>
+<h2>
+<a id="user-content-response-fields-2" class="anchor" href="#response-fields-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Response Fields</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td>integer</td>
+<td>The status code returned from the request</td>
+</tr>
+<tr>
+<td><code>id</code></td>
+<td>string</td>
+<td>The Universally Unique ID that has been assigned to this image</td>
+</tr>
+<tr>
+<td><code class="red">invalid</code></td>
+<td>array of string</td>
+<td>Returned with a 400 response. A list of query parameters that were invalid</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-error-responses-3" class="anchor" href="#error-responses-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Error Responses</h2>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td>Not Valid</td>
+<td>At least one required query parameter was missing or empty, or a parameter had an invalid type or value</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Internal Server Error</td>
+<td>Some other error occurred</td>
+</tr>
+</tbody>
+</table>
+<h1>
+<a id="user-content--post-imageverify" class="anchor" href="#-post-imageverify" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> POST <code>/image/verify</code>
+</h1>
+<p>Confirms whether or not a passcode can be used to edit an image.</p>
+<h2>
+<a id="user-content-query-type-1" class="anchor" href="#query-type-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Type</h2>
+<p><code>multipart/form-data</code></p>
+<h2>
+<a id="user-content-query-parameters-4" class="anchor" href="#query-parameters-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>string</td>
+<td>The Universally Unique ID of the image</td>
+</tr>
+<tr>
+<td><code>edit-pass</code></td>
+<td>string</td>
+<td>The passcode to confirm</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-example-response-3" class="anchor" href="#example-response-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example Response</h2>
+<div class="highlight highlight-source-js"><pre><span class="pl-kos">{</span>
+    <span class="grn">"status"</span>: <span class="amb">200</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>
+<a id="user-content-response-fields-3" class="anchor" href="#response-fields-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Response Fields</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td>integer</td>
+<td>The status code returned from the request</td>
+</tr>
+<tr>
+<td><code class="red">invalid</code></td>
+<td>array of string</td>
+<td>Returned with a 400 response. A list of query parameters that were invalid</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-error-responses-4" class="anchor" href="#error-responses-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Error Responses</h2>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td>Not Valid</td>
+<td>At least one required query parameter was missing or empty, or a parameter had an invalid type or value</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Forbidden</td>
+<td>The passcode sent was invalid, or does not match the requested resource</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Not Found</td>
+<td>The ID sent in this request does not match a resource</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Internal Server Error</td>
+<td>Some other error occurred</td>
+</tr>
+</tbody>
+</table>
+<h1>
+<a id="user-content--post-imageupdate" class="anchor" href="#-post-imageupdate" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> POST <code>/image/update</code>
+</h1>
+<p>Changes the data associated with an image, including possibly the image file.</p>
+<h2>
+<a id="user-content-query-type-2" class="anchor" href="#query-type-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Type</h2>
+<p><code>multipart/form-data</code></p>
+<h2>
+<a id="user-content-query-parameters-5" class="anchor" href="#query-parameters-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>string</td>
+<td>The Universally Unique ID of the image</td>
+</tr>
+<tr>
+<td><code>edit-pass</code></td>
+<td>string</td>
+<td>The passcode needed to edit the image</td>
+</tr>
+<tr>
+<td>
+<code class="amb">title</code> (optional)</td>
+<td>string</td>
+<td>The title to give the image. If missing, the title will not be changed. Cannot be empty</td>
+</tr>
+<tr>
+<td>
+<code class="amb">file</code> (optional)</td>
+<td>image file</td>
+<td>The image file to be uploaded. If missing, the image will not be changed. If an image is included, the image's recorded timestamp will also be updated to the time this request was processed. Cannot be empty</td>
+</tr>
+<tr>
+<td>
+<code class="amb">view-pass</code> (optional)</td>
+<td>string</td>
+<td>The passcode that will be needed to view the image. If empty, the image will be made public. If missing, the passcode will not be changed</td>
+</tr>
+<tr>
+<td>
+<code class="amb">nsfw</code> (optional)</td>
+<td>string <code>"true"</code> or <code>"false"</code>
+</td>
+<td>Whether to mark the image as Not Safe For Work. If missing, this data will not be changed</td>
+</tr>
+<tr>
+<td>
+<code class="amb">author</code> (optional)</td>
+<td>string</td>
+<td>The name to be associated with the image as its author. Note that this can be any string, it does not need to be a real name. If empty, this data will be cleared. If missing, this data will not be changed</td>
+</tr>
+<tr>
+<td>
+<code class="amb">copyright</code> (optional)</td>
+<td>string</td>
+<td>The copyright information to be associated with the image. Can be multiple lines. If empty, this data will be cleared. If missing, this data will not be changed</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-example-response-4" class="anchor" href="#example-response-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example Response</h2>
+<div class="highlight highlight-source-js"><pre><span class="pl-kos">{</span>
+    <span class="grn">"status"</span>: <span class="amb">200</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>
+<a id="user-content-response-fields-4" class="anchor" href="#response-fields-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Response Fields</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td>integer</td>
+<td>The status code returned from the request</td>
+</tr>
+<tr>
+<td><code class="red">invalid</code></td>
+<td>array of string</td>
+<td>Returned with a 400 response. A list of query parameters that were invalid</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-error-responses-5" class="anchor" href="#error-responses-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Error Responses</h2>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td>Not Valid</td>
+<td>At least one required query parameter was missing or empty, or a parameter had an invalid type or value</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Forbidden</td>
+<td>The passcode sent was invalid, or does not match the requested resource</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Not Found</td>
+<td>The ID sent in this request does not match a resource</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Internal Server Error</td>
+<td>Some other error occurred</td>
+</tr>
+</tbody>
+</table>
+<h1>
+<a id="user-content--post-imagedelete" class="anchor" href="#-post-imagedelete" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> POST <code>/image/delete</code>
+</h1>
+<p>Permanently deletes an image, and all data associated with it, from the server.</p>
+<h2>
+<a id="user-content-query-type-3" class="anchor" href="#query-type-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Type</h2>
+<p><code>multipart/form-data</code></p>
+<h2>
+<a id="user-content-query-parameters-6" class="anchor" href="#query-parameters-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>string</td>
+<td>The Universally Unique ID of the image</td>
+</tr>
+<tr>
+<td><code>edit-pass</code></td>
+<td>string</td>
+<td>The passcode needed to edit the image</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-example-response-5" class="anchor" href="#example-response-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example Response</h2>
+<div class="highlight highlight-source-js"><pre><span class="pl-kos">{</span>
+    <span class="grn">"status"</span>: <span class="amb">200</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>
+<a id="user-content-response-fields-5" class="anchor" href="#response-fields-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Response Fields</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td>integer</td>
+<td>The status code returned from the request</td>
+</tr>
+<tr>
+<td><code class="red">invalid</code></td>
+<td>array of string</td>
+<td>Returned with a 400 response. A list of query parameters that were invalid</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-error-responses-6" class="anchor" href="#error-responses-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Error Responses</h2>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td>Not Valid</td>
+<td>At least one required query parameter was missing or empty, or a parameter had an invalid type or value</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Forbidden</td>
+<td>The passcode sent was invalid, or does not match the requested resource</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Not Found</td>
+<td>The ID sent in this request does not match a resource</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Internal Server Error</td>
+<td>Some other error occurred</td>
+</tr>
+</tbody>
+</table>
+<h1>
+<a id="user-content--get-commentget" class="anchor" href="#-get-commentget" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> GET <code>/comment/get</code>
+</h1>
+<p>Returns all data associated with a comment ID from the server.</p>
+<h2>
+<a id="user-content-query-parameters-7" class="anchor" href="#query-parameters-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>string</td>
+<td>The Universally Unique ID of the comment</td>
+</tr>
+<tr>
+<td>
+<code class="amb">view-pass</code> (optional)</td>
+<td>string</td>
+<td>The passcode for viewing the image the comment was posted to (required if the image is private)</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-example-response-6" class="anchor" href="#example-response-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example Response</h2>
+<div class="highlight highlight-source-js"><pre><span class="pl-kos">{</span>
+    <span class="grn">"status"</span>: <span class="amb">200</span><span class="pl-kos">,</span>
+    <span class="grn">"image-id"</span>: <span class="grn">"03af5278-fb18-4aad-9dbf-5deebe40e5a3"</span><span class="pl-kos">,</span>
+    <span class="grn">"display-name"</span>: <span class="grn">"Anonymous"</span><span class="pl-kos">,</span>
+    <span class="grn">"text"</span>: <span class="grn">"Lorem ipsum dolor sit amet,<span class="amb">\n</span>consectetur adipiscing elit."</span><span class="pl-kos">,</span>
+    <span class="grn">"timestamp"</span>: <span class="amb">1610619915325</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>
+<a id="user-content-response-fields-6" class="anchor" href="#response-fields-6" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Response Fields</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td>integer</td>
+<td>The status code returned from the request</td>
+</tr>
+<tr>
+<td><code>image-id</code></td>
+<td>string</td>
+<td>The Universally Unique ID of the image that the comment was posted on</td>
+</tr>
+<tr>
+<td><code>display-name</code></td>
+<td>string</td>
+<td>The name associated with the comment. Note that this can be any string, it does not need to be a real name</td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td>string</td>
+<td>The content of the comment itself. Can be multiple lines</td>
+</tr>
+<tr>
+<td><code>timestamp</code></td>
+<td>integer</td>
+<td>The timestamp in milliseconds that the comment was posted, from JavaScript's <code>Date.now()</code>
+</td>
+</tr>
+<tr>
+<td><code class="red">invalid</code></td>
+<td>array of string</td>
+<td>Returned with a 400 response. A list of query parameters that were invalid</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-error-responses-7" class="anchor" href="#error-responses-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Error Responses</h2>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td>Not Valid</td>
+<td>The required query parameter was missing or empty, or a parameter had an invalid type or value</td>
+</tr>
+<tr>
+<td>401</td>
+<td>Unauthorised</td>
+<td>The request required a passcode, and one was not provided</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Forbidden</td>
+<td>The passcode sent was invalid, or does not match the requested resource</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Not Found</td>
+<td>The ID sent in this request does not match a resource</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Internal Server Error</td>
+<td>Some other error occurred</td>
+</tr>
+</tbody>
+</table>
+<h1>
+<a id="user-content--get-commentlist" class="anchor" href="#-get-commentlist" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> GET <code>/comment/list</code>
+</h1>
+<p>Retrieves a list of comments on a particular image from the server.</p>
+<h2>
+<a id="user-content-query-parameters-8" class="anchor" href="#query-parameters-8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>string</td>
+<td>The Universally Unique ID of the image</td>
+</tr>
+<tr>
+<td>
+<code class="amb">view-pass</code> (optional)</td>
+<td>string</td>
+<td>The passcode for viewing the image (required if the image is private)</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-example-response-7" class="anchor" href="#example-response-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example Response</h2>
+<div class="highlight highlight-source-js"><pre><span class="pl-kos">{</span>
+    <span class="grn">"status"</span>: <span class="amb">200</span><span class="pl-kos">,</span>
+    <span class="grn">"comments"</span>: <span class="pl-kos">[</span>
+        <span class="pl-kos">{</span>
+            <span class="grn">"id"</span>: <span class="grn">"03af5278-fb18-4aad-9dbf-5deebe40e5a3"</span><span class="pl-kos">,</span>
+            <span class="grn">"display-name"</span>: <span class="grn">"Anonymous"</span><span class="pl-kos">,</span>
+            <span class="grn">"text"</span>: <span class="grn">"Lorem ipsum dolor sit amet,<span class="amb">\n</span>consectetur adipiscing elit."</span><span class="pl-kos">,</span>
+            <span class="grn">"timestamp"</span>: <span class="amb">1610619915325</span>
+        <span class="pl-kos">}</span><span class="pl-kos">,</span>
+        <span class="gry">// ...</span>
+    <span class="pl-kos">]</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>
+<a id="user-content-response-fields-7" class="anchor" href="#response-fields-7" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Response Fields</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td>integer</td>
+<td>The status code returned from the request</td>
+</tr>
+<tr>
+<td><code>comments</code></td>
+<td>list of object</td>
+<td>A list of objects representing the comments returned from the request</td>
+</tr>
+<tr>
+<td><code>comments[i].id</code></td>
+<td>string</td>
+<td>The Universally Unique ID of the ith comment returned</td>
+</tr>
+<tr>
+<td><code>comments[i].display-name</code></td>
+<td>string</td>
+<td>The name associated with the comment. Note that this can be any string, it does not need to be a real name</td>
+</tr>
+<tr>
+<td><code>comments[i].text</code></td>
+<td>string</td>
+<td>The content of the comment itself. Can be multiple lines</td>
+</tr>
+<tr>
+<td><code>comments[i].timestamp</code></td>
+<td>integer</td>
+<td>The timestamp in milliseconds that the comment was posted, from JavaScript's <code>Date.now()</code>
+</td>
+</tr>
+<tr>
+<td><code class="red">invalid</code></td>
+<td>array of string</td>
+<td>Returned with a 400 response. A list of query parameters that were invalid</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-error-responses-8" class="anchor" href="#error-responses-8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Error Responses</h2>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td>Not Valid</td>
+<td>The required query parameter was missing or empty, or a parameter had an invalid type or value</td>
+</tr>
+<tr>
+<td>401</td>
+<td>Unauthorised</td>
+<td>The request required a passcode, and one was not provided</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Forbidden</td>
+<td>The passcode sent was invalid, or does not match the requested resource</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Not Found</td>
+<td>The ID sent in this request does not match a resource</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Internal Server Error</td>
+<td>Some other error occurred</td>
+</tr>
+</tbody>
+</table>
+<h1>
+<a id="user-content--post-commentupload" class="anchor" href="#-post-commentupload" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> POST <code>/comment/upload</code>
+</h1>
+<p>Posts a comment on an image.</p>
+<h2>
+<a id="user-content-query-type-4" class="anchor" href="#query-type-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Type</h2>
+<p><code>multipart/form-data</code></p>
+<h2>
+<a id="user-content-query-parameters-9" class="anchor" href="#query-parameters-9" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Query Parameters</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>id</code></td>
+<td>string</td>
+<td>The Universally Unique ID of the image</td>
+</tr>
+<tr>
+<td>
+<code class="amb">view-pass</code> (optional)</td>
+<td>string</td>
+<td>The passcode for viewing the image (required if the image is private)</td>
+</tr>
+<tr>
+<td>
+<code class="amb">display-name</code> (optional)</td>
+<td>string</td>
+<td>The name to be associated with the comment. If empty or missing, the name will be set to <code>"Anonymous"</code>
+</td>
+</tr>
+<tr>
+<td><code>text</code></td>
+<td>string</td>
+<td>The content of the comment itself. Can be multiple lines</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-example-response-8" class="anchor" href="#example-response-8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example Response</h2>
+<div class="highlight highlight-source-js"><pre><span class="pl-kos">{</span>
+    <span class="grn">"status"</span>: <span class="amb">200</span><span class="pl-kos">,</span>
+    <span class="grn">"id"</span>: <span class="grn">"03af5278-fb18-4aad-9dbf-5deebe40e5a3"</span>
+<span class="pl-kos">}</span></pre></div>
+<h2>
+<a id="user-content-response-fields-8" class="anchor" href="#response-fields-8" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Response Fields</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>status</code></td>
+<td>integer</td>
+<td>The status code returned from the request</td>
+</tr>
+<tr>
+<td><code>id</code></td>
+<td>string</td>
+<td>The Universally Unique ID of the comment</td>
+</tr>
+<tr>
+<td><code class="red">invalid</code></td>
+<td>array of string</td>
+<td>Returned with a 400 response. A list of query parameters that were invalid</td>
+</tr>
+</tbody>
+</table>
+<h2>
+<a id="user-content-error-responses-9" class="anchor" href="#error-responses-9" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Error Responses</h2>
+<table>
+<thead>
+<tr>
+<th>Status Code</th>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td>Not Valid</td>
+<td>At least one required query parameter was missing or empty, or a parameter had an invalid type or value</td>
+</tr>
+<tr>
+<td>401</td>
+<td>Unauthorised</td>
+<td>The request required a passcode, and one was not provided</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Forbidden</td>
+<td>The passcode sent was invalid, or does not match the requested resource</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Not Found</td>
+<td>The ID sent in this request does not match a resource</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Internal Server Error</td>
+<td>Some other error occurred</td>
+</tr>
+</tbody>
+</table>
+
+            </div>
+        </div>
+    </body>
+</html>
