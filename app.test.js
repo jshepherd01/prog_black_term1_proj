@@ -4,6 +4,7 @@
 const request = require('supertest');
 const app = require('./app');
 const fs = require('fs');
+const { doesNotMatch } = require('assert');
 
 let originalFilesList;
 
@@ -20,6 +21,11 @@ beforeAll(() => {
     fs.copyFileSync('test_data/c1388249-fb15-4e29-9c8e-f2013c226ee4.jpeg','uploads/c1388249-fb15-4e29-9c8e-f2013c226ee4.jpeg');
     fs.copyFileSync('test_data/d46c8501-09d4-42a7-b87b-06d3fd89fffa.png','uploads/d46c8501-09d4-42a7-b87b-06d3fd89fffa.png');
     fs.copyFileSync('test_data/a437764d-5af1-4beb-836e-9fa986fc1b10.bmp','uploads/a437764d-5af1-4beb-836e-9fa986fc1b10.bmp');
+    fs.copyFileSync('test_data/1f357f36-6e3f-465c-8633-45e109a1c40f.png','uploads/1f357f36-6e3f-465c-8633-45e109a1c40f.png');
+    fs.copyFileSync('test_data/32524b16-2a2a-4819-a835-a6d7d1e85a4f.png','uploads/32524b16-2a2a-4819-a835-a6d7d1e85a4f.png');
+    fs.copyFileSync('test_data/8da01847-a996-49f8-96fa-363b1a3bd243.png','uploads/8da01847-a996-49f8-96fa-363b1a3bd243.png');
+    fs.copyFileSync('test_data/9f229eeb-1352-494f-8fae-cf13f3cbb457.png','uploads/9f229eeb-1352-494f-8fae-cf13f3cbb457.png');
+    fs.copyFileSync('test_data/0189bc8a-5c99-4c84-b567-607ce5d58e19.png','uploads/0189bc8a-5c99-4c84-b567-607ce5d58e19.png');
 });
 
 afterAll(() => {
@@ -523,5 +529,352 @@ describe('Test /image/verify', () => {
             .expect(200)
             .expect('Content-type', /json/)
             .expect(/200/);
+    });
+});
+
+describe('Test /image/update', () => {
+    test('Fails with no data', () => {
+        return request(app)
+            .post('/image/update')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/invalid/);
+    });
+
+    test('Fails with no id', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('edit-pass','zR+sQBXLehcpoVlsIh2Od6gW')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/id/);
+    })
+
+    test('Fails with empty id', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '')
+            .field('edit-pass','zR+sQBXLehcpoVlsIh2Od6gW')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/id/);
+    });
+
+    test('Fails with not-found id', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', 'af2fd9ea-159f-409c-a991-9db3c63320ee')
+            .field('edit-pass','zR+sQBXLehcpoVlsIh2Od6gW')
+            .expect(404)
+            .expect('Content-type', /json/)
+            .expect(/404/);
+    });
+
+    test('Fails with no edit-pass', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/edit-pass/);
+    });
+
+    test('Fails with empty edit-pass', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', '')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/edit-pass/);
+    });
+
+    test('Fails with wrong edit-pass', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'qMQWogL2jSbDHB0hW5uMwZsR')
+            .expect(403)
+            .expect('Content-type', /json/)
+            .expect(/403/);
+    });
+
+    test('Succeeds with correct data', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/200/);
+    });
+
+    test('Fails with empty title', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .field('title','')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/title/);
+    });
+
+    test('Succeeds with new title', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .field('title','$TEST$ UPDATED')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/200/)
+            .then(() => {
+                return request(app)
+                    .get('/image/get?id=1f357f36-6e3f-465c-8633-45e109a1c40f&view-pass=aURrFQatFJea5SDjsPFlLRtw')
+                    .expect(200)
+                    .expect('Content-type',/json/)
+                    .expect(/\$TEST\$ UPDATED/);
+            });
+    });
+
+    test('Fails with wrong file type', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .attach('file',fs.readFileSync('test_data/invalid.txt'),'invalid.txt')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/file/);
+    });
+
+    test('Fails with string as file', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .field('file','invalid.jpg')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/file/);
+    });
+
+    test('Fails with empty file', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .attach('file',fs.readFileSync('test_data/invalid.jpg'),'invalid.jpg')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/file/);
+    });
+
+    test('Succeeds with new file', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .attach('file',fs.readFileSync('test_data/valid.jpg'),'valid.jpg')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/200/)
+            .then(() => {
+                return request(app)
+                    .get('/image/embed?id=1f357f36-6e3f-465c-8633-45e109a1c40f&view-pass=aURrFQatFJea5SDjsPFlLRtw')
+                    .expect(200)
+                    .expect('Content-type',/jpe?g/);
+            });
+    });
+
+    test('Succeeds with empty view-pass', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .field('view-pass','')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/200/)
+            .then(() => {
+                return request(app)
+                    .get('/image/get?id=1f357f36-6e3f-465c-8633-45e109a1c40f')
+                    .expect(200);
+            });
+    });
+
+    test('Succeeds with new view-pass', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '0189bc8a-5c99-4c84-b567-607ce5d58e19')
+            .field('edit-pass', 'UYSfG7T6m3FfCJViIMbbedIX')
+            .field('view-pass','/7RZoQ/CwJ5QqCHYXAvErW7w')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/200/)
+            .then(() => {
+                return request(app)
+                    .get('/image/get?id=0189bc8a-5c99-4c84-b567-607ce5d58e19')
+                    .expect(401)
+                    .then(() => {
+                        return request(app)
+                            .get('/image/get?id=1f357f36-6e3f-465c-8633-45e109a1c40f&view-pass=/7RZoQ/CwJ5QqCHYXAvErW7w')
+                            .expect(200);
+                    });
+            });
+    });
+
+    test('Ignores empty NSFW', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .field('nsfw','')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/200/);
+    });
+
+    test('Fails with junk NSFW', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .field('nsfw','banana')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/nsfw/);
+    });
+
+    test('Succeeds with true NSFW', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .field('nsfw','true')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/200/)
+            .then(() => {
+                return request(app)
+                    .get('/image/get?id=1f357f36-6e3f-465c-8633-45e109a1c40f&view-pass=aURrFQatFJea5SDjsPFlLRtw')
+                    .expect(200)
+                    .expect('Content-type', /json/)
+                    .expect(/nsfw.{0,3}true/);
+            });
+    });
+
+    test('Succeeds with true NSFW', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .field('nsfw','false')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/200/)
+            .then(() => {
+                return request(app)
+                    .get('/image/get?id=1f357f36-6e3f-465c-8633-45e109a1c40f&view-pass=aURrFQatFJea5SDjsPFlLRtw')
+                    .expect(200)
+                    .expect('Content-type', /json/)
+                    .expect(/nsfw.{0,3}false/);
+            });
+    });
+
+    test('Succeeds with empty author', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .field('author','')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/200/)
+            .then(() => {
+                return request(app)
+                    .get('/image/get?id=1f357f36-6e3f-465c-8633-45e109a1c40f&view-pass=aURrFQatFJea5SDjsPFlLRtw')
+                    .expect(200)
+                    .expect('Content-type', /json/)
+                    .expect(/author.{0,3}(''|"")/);
+            });
+    });
+
+    test('Succeeds with new author', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .field('author','$TEST$ NEW AUTHOR')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/200/)
+            .then(() => {
+                return request(app)
+                    .get('/image/get?id=1f357f36-6e3f-465c-8633-45e109a1c40f&view-pass=aURrFQatFJea5SDjsPFlLRtw')
+                    .expect(200)
+                    .expect('Content-type', /json/)
+                    .expect(/\$TEST\$ NEW AUTHOR/);
+            });
+    });
+
+    test('Succeeds with empty copyright', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .field('copyright','')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/200/)
+            .then(() => {
+                return request(app)
+                    .get('/image/get?id=1f357f36-6e3f-465c-8633-45e109a1c40f&view-pass=aURrFQatFJea5SDjsPFlLRtw')
+                    .expect(200)
+                    .expect('Content-type', /json/)
+                    .expect(/copyright.{0,3}(''|"")/);
+            });
+    });
+
+    test('Succeeds with new copyright', () => {
+        return request(app)
+            .post('/image/update')
+            .set('content-type','multipart/form-data')
+            .field('id', '1f357f36-6e3f-465c-8633-45e109a1c40f')
+            .field('edit-pass', 'zR+sQBXLehcpoVlsIh2Od6gW')
+            .field('copyright','$TEST$ NEW COPYRIGHT')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/200/)
+            .then(() => {
+                return request(app)
+                    .get('/image/get?id=1f357f36-6e3f-465c-8633-45e109a1c40f&view-pass=aURrFQatFJea5SDjsPFlLRtw')
+                    .expect(200)
+                    .expect('Content-type', /json/)
+                    .expect(/\$TEST\$ NEW COPYRIGHT/);
+            });
     });
 });

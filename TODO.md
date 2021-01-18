@@ -1,7 +1,6 @@
 # Back End
 
 - Jest testing
-- /image/update
 - /image/delete
 - /comment/get
 - /comment/list

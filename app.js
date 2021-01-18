@@ -101,13 +101,13 @@ const validate = (body, rules, file=null, defaults={}) => {
         let invalid = [];
         if ('file' in rules) {
             /* validation on the file */
-            if (file && file.size > 0) {
-                if (rules['file'].includes(file.mimetype.split('/')[0])) {
+            if (file) {
+                if (file.size > 0 && rules['file'].includes(file.mimetype.split('/')[0])) {
                     newEntry['uri'] = file.filename;
                 } else {
                     invalid.push('file');
                 }
-            } else if (rules['file'].includes('optional')) {
+            } else if (rules['file'].includes('optional') && body && !('file' in body)) {
                 newEntry['uri'] = defaults['file'];
             } else {
                 invalid.push('file');
@@ -566,6 +566,14 @@ app.post('/image/update', upload.single('file'), (req, res) => {
         'boolean': null,
         'file': null
     }).then(ret => {
+        if (ret['title'] === '') throw new UserError(
+            'At least one input was invalid',
+            {
+                'status': 400,
+                'invalid': ['title']
+            }
+        );
+
         valResult = ret;
 
         return getItemByID(dbImagePath, valResult['id']);

@@ -237,7 +237,7 @@ Name | Type | Description
 `title` (optional) | string | The title to give the image. If missing, the title will not be changed. Cannot be empty
 `file` (optional) | image file | The image file to be uploaded. If missing, the image will not be changed. If an image is included, the image's recorded timestamp will also be updated to the time this request was processed. Cannot be empty
 `view-pass` (optional) | string | The passcode that will be needed to view the image. If empty, the image will be made public. If missing, the passcode will not be changed
-`nsfw` (optional) | string `"true"` or `"false"` | Whether to mark the image as Not Safe For Work. If missing, this data will not be changed
+`nsfw` (optional) | string `"true"` or `"false"` | Whether to mark the image as Not Safe For Work. If missing or empty, this data will not be changed
 `author` (optional) | string | The name to be associated with the image as its author. Note that this can be any string, it does not need to be a real name. If empty, this data will be cleared. If missing, this data will not be changed
 `copyright` (optional) | string | The copyright information to be associated with the image. Can be multiple lines. If empty, this data will be cleared. If missing, this data will not be changed
 
