@@ -101,7 +101,7 @@ const validate = (body, rules, file=null, defaults={}) => {
         let invalid = [];
         if ('file' in rules) {
             /* validation on the file */
-            if (file) {
+            if (file && file.size > 0) {
                 if (rules['file'].includes(file.mimetype.split('/')[0])) {
                     newEntry['uri'] = file.filename;
                 } else {
