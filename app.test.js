@@ -1025,8 +1025,137 @@ describe('Test /image/delete', () => {
     });
 });
 
-// describe('Test /comment/get');
+describe('Test /comment/get', () => {
+    test('Fails with no data', () => {
+        return request(app)
+            .get('/comment/get')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/invalid/);
+    });
 
-// describe('Test /comment/list');
+    test('Fails with empty id', () => {
+        return request(app)
+            .get('/comment/get?id')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/id/);
+    });
+
+    test('Fails on not-found id', () => {
+        return request(app)
+            .get('/comment/get?id=af2fd9ea-159f-409c-a991-9db3c63320ee')
+            .expect(404)
+            .expect('Content-type', /json/)
+            .expect(/404/);
+    });
+
+    test('Succeeds on public image', () => {
+        return request(app)
+            .get('/comment/get?id=0ed8d198-d63f-476f-9783-46edfc85bbee')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/\$TEST\$ PUBLIC COMMENT/);
+    });
+
+    test('Fails with no view-pass on private image', () => {
+        return request(app)
+            .get('/comment/get?id=d93f60af-0c72-4a99-98ac-166ea1ffc449')
+            .expect(401)
+            .expect('Content-type',/json/)
+            .expect(/401/);
+    });
+
+    test('Fails with empty view-pass on private image', () => {
+        return request(app)
+            .get('/comment/get?id=d93f60af-0c72-4a99-98ac-166ea1ffc449&view-pass')
+            .expect(401)
+            .expect('Content-type',/json/)
+            .expect(/401/);
+    });
+
+    test('Fails with wrong view-pass on private image', () => {
+        return request(app)
+            .get('/comment/get?id=d93f60af-0c72-4a99-98ac-166ea1ffc449&view-pass=DyXWO8O5AJHl6Ff5aZC3uwWD')
+            .expect(403)
+            .expect('Content-type',/json/)
+            .expect(/403/);
+    });
+
+    test('Succeeds on private image', () => {
+        return request(app)
+            .get('/comment/get?id=d93f60af-0c72-4a99-98ac-166ea1ffc449&view-pass=qMQWogL2jSbDHB0hW5uMwZsR')
+            .expect(200)
+            .expect('Content-type',/json/)
+            .expect(/\$TEST\$ PRIVATE COMMENT/);
+    });
+});
+
+describe('Test /comment/list', () => {
+    test('Fails with no data', () => {
+        return request(app)
+            .get('/comment/list')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/invalid/);
+    });
+
+    test('Fails with empty id', () => {
+        return request(app)
+            .get('/comment/list?id')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/id/);
+    });
+
+    test('Fails on not-found id', () => {
+        return request(app)
+            .get('/comment/list?id=af2fd9ea-159f-409c-a991-9db3c63320ee')
+            .expect(404)
+            .expect('Content-type', /json/)
+            .expect(/404/);
+    });
+
+    test('Succeeds on public image', () => {
+        return request(app)
+            .get('/comment/list?id=d46c8501-09d4-42a7-b87b-06d3fd89fffa')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/\$TEST\$ PUBLIC COMMENT/)
+            .expect(/\$TEST\$ LONG COMMENT/);
+    });
+
+    test('Fails with no view-pass on private image', () => {
+        return request(app)
+            .get('/comment/list?id=a437764d-5af1-4beb-836e-9fa986fc1b10')
+            .expect(401)
+            .expect('Content-type',/json/)
+            .expect(/401/);
+    });
+
+    test('Fails with empty view-pass on private image', () => {
+        return request(app)
+            .get('/comment/list?id=a437764d-5af1-4beb-836e-9fa986fc1b10&view-pass')
+            .expect(401)
+            .expect('Content-type',/json/)
+            .expect(/401/);
+    });
+
+    test('Fails with wrong view-pass on private image', () => {
+        return request(app)
+            .get('/comment/list?id=a437764d-5af1-4beb-836e-9fa986fc1b10&view-pass=DyXWO8O5AJHl6Ff5aZC3uwWD')
+            .expect(403)
+            .expect('Content-type',/json/)
+            .expect(/403/);
+    });
+
+    test('Succeeds on private image', () => {
+        return request(app)
+            .get('/comment/list?id=a437764d-5af1-4beb-836e-9fa986fc1b10&view-pass=qMQWogL2jSbDHB0hW5uMwZsR')
+            .expect(200)
+            .expect('Content-type',/json/)
+            .expect(/\$TEST\$ PRIVATE COMMENT/);
+    });
+});
 
 // describe('Test /comment/upload');

@@ -6,8 +6,6 @@
 # Back End
 
 - Jest testing
-- /comment/get
-- /comment/list
 - /comment/upload
 - Clean up after testing
 
