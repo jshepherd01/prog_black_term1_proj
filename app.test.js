@@ -99,6 +99,81 @@ describe('Test /image/get', () => {
     });
 });
 
+describe('Test /image/list', () => {
+    test('No parameters returns correct item', () => {
+        return request(app)
+            .get('/image/list')
+            .expect(200)
+            .expect('Content-type',/json/)
+            .expect(/\$TEST\$ PUBLIC SFW/);
+    });
+
+    test('No parameters doesn\'t return private item', () => {
+        return request(app)
+            .get('/image/list')
+            .expect(200)
+            .expect('Content-type',/json/)
+            .expect(/^((?!PRIVATE).)*$/s);
+    });
+
+    test('No parameters doesn\'t return nsfw item', () => {
+        return request(app)
+            .get('/image/list')
+            .expect(200)
+            .expect('Content-type',/json/)
+            .expect(/^((?!NSFW).)*$/s);
+    });
+
+    test('Fails with junk NSFW', () => {
+        return request(app)
+            .get('/image/list?nsfw=banana')
+            .expect(400)
+            .expect('Content-type',/json/)
+            .expect(/nsfw/);
+    });
+
+    test('Empty NSFW returns correct items', () => {
+        return request(app)
+            .get('/image/list?nsfw')
+            .expect(200)
+            .expect('Content-type',/json/)
+            .expect(/\$TEST\$ PUBLIC SFW/)
+            .expect(/\$TEST\$ PUBLIC NSFW/);
+    });
+
+    test('Empty NSFW doesn\'t return private item', () => {
+        return request(app)
+            .get('/image/list?nsfw')
+            .expect(200)
+            .expect('Content-type',/json/)
+            .expect(/^((?!PRIVATE).)*$/s);
+    });
+
+    test('True NSFW returns correct item', () => {
+        return request(app)
+            .get('/image/list?nsfw=true')
+            .expect(200)
+            .expect('Content-type',/json/)
+            .expect(/\$TEST\$ PUBLIC NSFW/);
+    });
+
+    test('True NSFW doesn\'t return private item', () => {
+        return request(app)
+            .get('/image/list?nsfw=true')
+            .expect(200)
+            .expect('Content-type',/json/)
+            .expect(/^((?!PRIVATE).)*$/s);
+    });
+
+    test('True NSFW doesn\'t return sfw item', () => {
+        return request(app)
+            .get('/image/list?nsfw=true')
+            .expect(200)
+            .expect('Content-type',/json/)
+            .expect(/^((?! SFW).)*$/s);
+    });
+});
+
 describe('Test /image/upload', () => {
     test('Fails with no data', () => {
         return request(app)
@@ -226,7 +301,7 @@ describe('Test /image/upload', () => {
             .expect(/id/);
     });
 
-    test('Fails with invalid NSFW flag', () => {
+    test('Fails with junk NSFW', () => {
         return request(app)
             .post('/image/upload')
             .set('content-type','multipart/form-data')

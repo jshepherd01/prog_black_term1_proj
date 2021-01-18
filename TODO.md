@@ -1,7 +1,6 @@
 # Back End
 
 - Jest testing
-- /image/list
 - /image/embed
 - /image/verify
 - /image/update
