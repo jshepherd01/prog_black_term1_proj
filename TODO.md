@@ -6,7 +6,6 @@
 # Back End
 
 - Jest testing
-- /image/delete
 - /comment/get
 - /comment/list
 - /comment/upload

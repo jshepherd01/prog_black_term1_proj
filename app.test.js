@@ -934,3 +934,99 @@ describe('Test /image/update', () => {
             });
     });
 });
+
+describe('Test /image/delete', () => {
+    test('Fails with no data', () => {
+        return request(app)
+            .post('/image/delete')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/invalid/);
+    });
+
+    test('Fails with no id', () => {
+        return request(app)
+            .post('/image/delete')
+            .set('content-type','multipart/form-data')
+            .field('edit-pass','fYNSSSsn7NmWtMqps8yx6+aG')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/id/);
+    })
+
+    test('Fails with empty id', () => {
+        return request(app)
+            .post('/image/delete')
+            .set('content-type','multipart/form-data')
+            .field('id', '')
+            .field('edit-pass','fYNSSSsn7NmWtMqps8yx6+aG')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/id/);
+    });
+
+    test('Fails with not-found id', () => {
+        return request(app)
+            .post('/image/delete')
+            .set('content-type','multipart/form-data')
+            .field('id', 'af2fd9ea-159f-409c-a991-9db3c63320ee')
+            .field('edit-pass','fYNSSSsn7NmWtMqps8yx6+aG')
+            .expect(404)
+            .expect('Content-type', /json/)
+            .expect(/404/);
+    });
+
+    test('Fails with no edit-pass', () => {
+        return request(app)
+            .post('/image/delete')
+            .set('content-type','multipart/form-data')
+            .field('id', 'd46c8501-09d4-42a7-b87b-06d3fd89fffa')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/edit-pass/);
+    });
+
+    test('Fails with empty edit-pass', () => {
+        return request(app)
+            .post('/image/delete')
+            .set('content-type','multipart/form-data')
+            .field('id', 'd46c8501-09d4-42a7-b87b-06d3fd89fffa')
+            .field('edit-pass', '')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/edit-pass/);
+    });
+
+    test('Fails with wrong edit-pass', () => {
+        return request(app)
+            .post('/image/delete')
+            .set('content-type','multipart/form-data')
+            .field('id', 'd46c8501-09d4-42a7-b87b-06d3fd89fffa')
+            .field('edit-pass', 'qMQWogL2jSbDHB0hW5uMwZsR')
+            .expect(403)
+            .expect('Content-type', /json/)
+            .expect(/403/);
+    });
+
+    test('Succeeds with correct data', () => {
+        return request(app)
+            .post('/image/delete')
+            .set('content-type','multipart/form-data')
+            .field('id', '32524b16-2a2a-4819-a835-a6d7d1e85a4f')
+            .field('edit-pass', 'VWxLlHnbVAovGBSWt9VFOpZK')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/200/)
+            .then(() => {
+                return request(app)
+                    .get('/image/get?id=32524b16-2a2a-4819-a835-a6d7d1e85a4f')
+                    .expect(404);
+            });
+    });
+});
+
+// describe('Test /comment/get');
+
+// describe('Test /comment/list');
+
+// describe('Test /comment/upload');
