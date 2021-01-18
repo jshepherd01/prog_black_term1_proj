@@ -1156,6 +1156,185 @@ describe('Test /comment/list', () => {
             .expect('Content-type',/json/)
             .expect(/\$TEST\$ PRIVATE COMMENT/);
     });
+
+    test('Succeeds on image with no comments', () => {
+        return request(app)
+            .get('/comment/list?id=8d5d083e-2180-49bd-bd91-ae9931b49f09')
+            .expect(200)
+            .expect('Content-type',/json/)
+            .expect(/\[\]/);
+    });
 });
 
-// describe('Test /comment/upload');
+describe('Test /comment/upload', () => {
+    test('Fails with no data', () => {
+        return request(app)
+            .post('/comment/upload')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/invalid/);
+    });
+
+    test('Fails with no id', () => {
+        return request(app)
+            .post('/comment/upload')
+            .set('content-type','multipart/form-data')
+            .field('text','$TEST$ PUBLIC IMAGE')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/id/);
+    });
+
+    test('Fails with empty id', () => {
+        return request(app)
+            .post('/comment/upload')
+            .set('content-type','multipart/form-data')
+            .field('id','')
+            .field('text','$TEST$ PUBLIC IMAGE')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/id/);
+    });
+
+    test('Fails with not-found id', () => {
+        return request(app)
+            .post('/comment/upload')
+            .set('content-type','multipart/form-data')
+            .field('id','af2fd9ea-159f-409c-a991-9db3c63320ee')
+            .field('text','$TEST$ PUBLIC IMAGE')
+            .expect(404)
+            .expect('Content-type', /json/)
+            .expect(/404/);
+    });
+
+    test('Fails with no text', () => {
+        return request(app)
+            .post('/comment/upload')
+            .set('content-type','multipart/form-data')
+            .field('id','af2fd9ea-159f-409c-a991-9db3c63320ee')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/text/);
+    })
+
+    test('Fails with empty text', () => {
+        return request(app)
+            .post('/comment/upload')
+            .set('content-type','multipart/form-data')
+            .field('id','af2fd9ea-159f-409c-a991-9db3c63320ee')
+            .field('text','')
+            .expect(400)
+            .expect('Content-type', /json/)
+            .expect(/text/);
+    })
+
+    test('Succeeds on public image', () => {
+        return request(app)
+            .post('/comment/upload')
+            .set('content-type','multipart/form-data')
+            .field('id','8da01847-a996-49f8-96fa-363b1a3bd243')
+            .field('text','$TEST$ PUBLIC IMAGE')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/id/)
+            .then(() => {
+                return request(app)
+                    .get('/comment/list?id=8da01847-a996-49f8-96fa-363b1a3bd243')
+                    .expect(200)
+                    .expect(/Anonymous/)
+                    .expect(/\$TEST\$ PUBLIC IMAGE/)
+            });
+    });
+
+    test('Fails with no view-pass on private image', () => {
+        return request(app)
+            .post('/comment/upload')
+            .set('content-type','multipart/form-data')
+            .field('id','9f229eeb-1352-494f-8fae-cf13f3cbb457')
+            .field('text','$TEST$ PRIVATE IMAGE')
+            .expect(401)
+            .expect('Content-type', /json/)
+            .expect(/401/)
+    });
+
+    test('Fails with empty view-pass on private image', () => {
+        return request(app)
+            .post('/comment/upload')
+            .set('content-type','multipart/form-data')
+            .field('id','9f229eeb-1352-494f-8fae-cf13f3cbb457')
+            .field('text','$TEST$ PRIVATE IMAGE')
+            .field('view-pass','')
+            .expect(401)
+            .expect('Content-type', /json/)
+            .expect(/401/)
+    });
+
+    test('Fails with wrong view-pass on private image', () => {
+        return request(app)
+            .post('/comment/upload')
+            .set('content-type','multipart/form-data')
+            .field('id','9f229eeb-1352-494f-8fae-cf13f3cbb457')
+            .field('text','$TEST$ PRIVATE IMAGE')
+            .field('view-pass','DyXWO8O5AJHl6Ff5aZC3uwWD')
+            .expect(403)
+            .expect('Content-type', /json/)
+            .expect(/403/)
+    });
+
+    test('Succeeds on private image', () => {
+        return request(app)
+            .post('/comment/upload')
+            .set('content-type','multipart/form-data')
+            .field('id','9f229eeb-1352-494f-8fae-cf13f3cbb457')
+            .field('text','$TEST$ PRIVATE IMAGE')
+            .field('view-pass','jCeeR0UMfQDg+kGARcLR2GxJ')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/id/)
+            .then(() => {
+                return request(app)
+                    .get('/comment/list?id=9f229eeb-1352-494f-8fae-cf13f3cbb457&view-pass=jCeeR0UMfQDg%2BkGARcLR2GxJ')
+                    .expect(200)
+                    .expect(/Anonymous/)
+                    .expect(/\$TEST\$ PRIVATE IMAGE/)
+            });
+    });
+
+    test('Succeeds with empty display-name', () => {
+        return request(app)
+            .post('/comment/upload')
+            .set('content-type','multipart/form-data')
+            .field('id','8da01847-a996-49f8-96fa-363b1a3bd243')
+            .field('text','$TEST$ EMPTY NAME')
+            .field('display-name','')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/id/)
+            .then(() => {
+                return request(app)
+                    .get('/comment/list?id=8da01847-a996-49f8-96fa-363b1a3bd243')
+                    .expect(200)
+                    .expect(/Anonymous/)
+                    .expect(/\$TEST\$ EMPTY NAME/)
+            });
+    });
+
+    test('Succeeds with display-name', () => {
+        return request(app)
+            .post('/comment/upload')
+            .set('content-type','multipart/form-data')
+            .field('id','8da01847-a996-49f8-96fa-363b1a3bd243')
+            .field('text','$TEST$ SET NAME')
+            .field('display-name','$TEST$ Nonymous')
+            .expect(200)
+            .expect('Content-type', /json/)
+            .expect(/id/)
+            .then(() => {
+                return request(app)
+                    .get('/comment/list?id=8da01847-a996-49f8-96fa-363b1a3bd243')
+                    .expect(200)
+                    .expect(/\$TEST\$ Nonymous/)
+                    .expect(/\$TEST\$ SET NAME/)
+            });
+    });
+});

@@ -5,9 +5,7 @@
 
 # Back End
 
-- Jest testing
-- /comment/upload
-- Clean up after testing
+- Clean data
 
 # Misc
 
