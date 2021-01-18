@@ -349,7 +349,13 @@ describe('Test /image/upload', () => {
             .attach('file',fs.readFileSync('test_data/valid.jpg'),'valid.jpg')
             .expect(200)
             .expect('Content-type', /json/)
-            .expect(/id/);
+            .expect(/id/)
+            .then(data => {
+                return request(app)
+                    .get('/image/get?id='+data.body['id'])
+                    .expect(200)
+                    .expect(/Valid Title/);
+            });
     });
 
     test('Succeeds with view-pass', () => {
@@ -362,7 +368,18 @@ describe('Test /image/upload', () => {
             .attach('file',fs.readFileSync('test_data/valid.jpg'),'valid.jpg')
             .expect(200)
             .expect('Content-type', /json/)
-            .expect(/id/);
+            .expect(/id/)
+            .then(data => {
+                let id = data.body['id']
+                return request(app)
+                    .get('/image/get?id='+id)
+                    .expect(401)
+                    .then(() => {
+                        return request(app)
+                            .get('/image/get?id='+id+'&view-pass=ValidViewPass')
+                            .expect(200);
+                    });
+            });
     });
 
     test('Fails with junk NSFW', () => {
@@ -388,7 +405,13 @@ describe('Test /image/upload', () => {
             .attach('file',fs.readFileSync('test_data/valid.jpg'),'valid.jpg')
             .expect(200)
             .expect('Content-type', /json/)
-            .expect(/id/);
+            .expect(/id/)
+            .then(data => {
+                return request(app)
+                    .get('/image/get?id='+data.body['id'])
+                    .expect(200)
+                    .expect(/nsfw.{0,3}true/);
+            });
     });
 
     test('Succeeds with nsfw false', () => {
@@ -401,7 +424,13 @@ describe('Test /image/upload', () => {
             .attach('file',fs.readFileSync('test_data/valid.jpg'),'valid.jpg')
             .expect(200)
             .expect('Content-type', /json/)
-            .expect(/id/);
+            .expect(/id/)
+            .then(data => {
+                return request(app)
+                    .get('/image/get?id='+data.body['id'])
+                    .expect(200)
+                    .expect(/nsfw.{0,3}false/);
+            });
     });
 
     test('Succeeds with author', () => {
@@ -414,7 +443,13 @@ describe('Test /image/upload', () => {
             .attach('file',fs.readFileSync('test_data/valid.jpg'),'valid.jpg')
             .expect(200)
             .expect('Content-type', /json/)
-            .expect(/id/);
+            .expect(/id/)
+            .then(data => {
+                return request(app)
+                    .get('/image/get?id='+data.body['id'])
+                    .expect(200)
+                    .expect(/Valid McAuthorson/);
+            });
     });
 
     test('Succeeds with copyright', () => {
@@ -427,7 +462,13 @@ describe('Test /image/upload', () => {
             .attach('file',fs.readFileSync('test_data/valid.jpg'),'valid.jpg')
             .expect(200)
             .expect('Content-type', /json/)
-            .expect(/id/);
+            .expect(/id/)
+            .then(data => {
+                return request(app)
+                    .get('/image/get?id='+data.body['id'])
+                    .expect(200)
+                    .expect(/Lorem ipsum/);
+            });
     });
 
     test('Succeeds with all optionals', () => {
@@ -443,7 +484,22 @@ describe('Test /image/upload', () => {
             .attach('file',fs.readFileSync('test_data/valid.jpg'),'valid.jpg')
             .expect(200)
             .expect('Content-type', /json/)
-            .expect(/id/);
+            .expect(/id/)
+            .then(data => {
+                let id = data.body['id']
+                return request(app)
+                    .get('/image/get?id='+id)
+                    .expect(401)
+                    .then(() => {
+                        return request(app)
+                            .get('/image/get?id='+id+'&view-pass=ValidViewPass')
+                            .expect(200)
+                            .expect(/Valid Title/)
+                            .expect(/nsfw.{0,3}true/)
+                            .expect(/Valid McAuthorson/)
+                            .expect(/Lorem ipsum/)
+                    })
+            });
     });
 });
 
