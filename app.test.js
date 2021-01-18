@@ -174,6 +174,64 @@ describe('Test /image/list', () => {
     });
 });
 
+describe('Test /image/embed', () => {
+    test('Fails with no data', () => {
+        return request(app)
+            .get('/image/embed')
+            .expect(400)
+            .expect('Content-type', /png/);
+    });
+
+    test('Fails with empty id', () => {
+        return request(app)
+            .get('/image/embed?id')
+            .expect(400)
+            .expect('Content-type', /png/);
+    });
+
+    test('Fails on not-found id', () => {
+        return request(app)
+            .get('/image/embed?id=af2fd9ea-159f-409c-a991-9db3c63320ee')
+            .expect(404)
+            .expect('Content-type', /png/);
+    });
+
+    test('Succeeds on public image', () => {
+        return request(app)
+            .get('/image/embed?id=d46c8501-09d4-42a7-b87b-06d3fd89fffa')
+            .expect(200)
+            .expect('Content-type', /png/);
+    });
+
+    test('Fails with no view-pass on private image', () => {
+        return request(app)
+            .get('/image/embed?id=a437764d-5af1-4beb-836e-9fa986fc1b10')
+            .expect(401)
+            .expect('Content-type',/png/);
+    });
+
+    test('Fails with empty view-pass on private image', () => {
+        return request(app)
+            .get('/image/embed?id=a437764d-5af1-4beb-836e-9fa986fc1b10&view-pass')
+            .expect(401)
+            .expect('Content-type',/png/);
+    });
+
+    test('Fails with wrong view-pass on private image', () => {
+        return request(app)
+            .get('/image/embed?id=a437764d-5af1-4beb-836e-9fa986fc1b10&view-pass=DyXWO8O5AJHl6Ff5aZC3uwWD')
+            .expect(403)
+            .expect('Content-type',/png/);
+    });
+
+    test('Succeeds on private image', () => {
+        return request(app)
+            .get('/image/embed?id=a437764d-5af1-4beb-836e-9fa986fc1b10&view-pass=qMQWogL2jSbDHB0hW5uMwZsR')
+            .expect(200)
+            .expect('Content-type',/bmp/);
+    });
+});
+
 describe('Test /image/upload', () => {
     test('Fails with no data', () => {
         return request(app)
