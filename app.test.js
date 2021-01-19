@@ -10,8 +10,8 @@ let originalFilesList;
 
 beforeAll(() => {
     // store original state
-    fs.copyFileSync('data/comment-db.json','temp/comment-db.json');
-    fs.copyFileSync('data/image-db.json','temp/image-db.json');
+    fs.copyFileSync('data/comment-db.json','backup/comment-db.json');
+    fs.copyFileSync('data/image-db.json','backup/image-db.json');
     originalFilesList = fs.readdirSync('uploads');
 
     // place test data
@@ -30,8 +30,8 @@ beforeAll(() => {
 
 afterAll(() => {
     // restore original state
-    fs.copyFileSync('temp/comment-db.json','data/comment-db.json');
-    fs.copyFileSync('temp/image-db.json','data/image-db.json');
+    fs.copyFileSync('backup/comment-db.json','data/comment-db.json');
+    fs.copyFileSync('backup/image-db.json','data/image-db.json');
     fs.readdirSync('uploads').forEach((file) => {
         if (!originalFilesList.includes(file)) {
             fs.unlinkSync('uploads/'+file);

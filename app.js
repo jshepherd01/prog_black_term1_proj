@@ -585,7 +585,7 @@ app.post('/image/update', upload.single('file'), (req, res) => {
 
         if (valResult['uri'] !== null) {
             newUri = `${valResult['id']}.${valResult['uri'].split('.')[1]}`;
-            if (data['uri'] !== 'removed.png') oldPath = `uploads/${data['uri']}`;
+            oldPath = `uploads/${data['uri']}`;
             tempPath = `uploads/temp/${valResult['uri']}`;
             newPath = `uploads/${newUri}`;
             changes['uri'] = newUri;
@@ -632,7 +632,7 @@ app.post('/image/delete', upload.none(), (req, res) => {
             throw new UserError('Incorrect passcode', {'status': 403});
         }
 
-        if (data['uri'] !== 'removed.png') imagePath = `uploads/${data['uri']}`;
+        imagePath = `uploads/${data['uri']}`;
 
         return deleteRecord(dbImagePath, valResult['id']);
 
