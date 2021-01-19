@@ -106,10 +106,7 @@ dist
 # My definitions
 cheat-sheet.txt
 plans.txt
-uploads/
-uploads/temp
 data/
-backup/
 *.pptx
 passcodes.txt
 api-docs-plan.txt
