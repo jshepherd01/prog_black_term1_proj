@@ -1,5 +1,7 @@
 # API reference index
 
+Can also be accessed from the site at `/api-docs` or using the 'docs' icon on the left of the page, or viewed from a file at `./static/api-docs`.
+
 ## Images
 1. [GET /image/get](#image-get)
 2. [GET /image/list](#image-list)
